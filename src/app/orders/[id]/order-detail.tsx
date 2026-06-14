@@ -1,0 +1,821 @@
+"use client"
+
+import { useState, useEffect, useRef, useCallback } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { Select } from "@/components/ui/select"
+import { Modal } from "@/components/ui/modal"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableHeaderCell,
+} from "@/components/ui/table"
+import {
+  cn,
+  formatPrice,
+  formatDate,
+  formatDateTime,
+  STATUS_LABELS,
+  STATUS_COLORS,
+  PRIORITY_LABELS,
+  PRIORITY_COLORS,
+} from "@/lib/utils"
+
+interface OrderItem {
+  id?: string
+  productId: string
+  productName?: string
+  quantity: number
+  price: number
+  basePrice?: number
+}
+
+interface OrderFile {
+  id: string
+  name: string
+  size: number
+  createdAt: string
+}
+
+interface Order {
+  id: string
+  title: string
+  description: string | null
+  status: string
+  priority: string
+  deadline: string | null
+  notes: string | null
+  customerId: string
+  customer?: { id: string; name: string }
+  items: OrderItem[]
+  files: OrderFile[]
+  createdAt: string
+  updatedAt?: string
+  createdBy?: { name: string } | null
+}
+
+interface Customer {
+  id: string
+  name: string
+}
+
+interface Product {
+  id: string
+  name: string
+  basePrice: number
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + " B"
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB"
+}
+
+const STATUS_OPTIONS = [
+  { value: "", label: "Selectează statusul" },
+  ...Object.entries(STATUS_LABELS).map(([k, v]) => ({ value: k, label: v })),
+]
+
+const PRIORITY_OPTIONS = [
+  { value: "", label: "Selectează prioritatea" },
+  ...Object.entries(PRIORITY_LABELS).map(([k, v]) => ({ value: k, label: v })),
+]
+
+export function OrderDetail() {
+  const router = useRouter()
+  const { id } = useParams() as { id: string }
+
+  const [order, setOrder] = useState<Order | null>(null)
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [customerId, setCustomerId] = useState("")
+  const [status, setStatus] = useState("")
+  const [priority, setPriority] = useState("")
+  const [deadline, setDeadline] = useState("")
+  const [notes, setNotes] = useState("")
+  const [items, setItems] = useState<OrderItem[]>([])
+  const [files, setFiles] = useState<OrderFile[]>([])
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<Product[]>([])
+  const [searching, setSearching] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [itemQuantity, setItemQuantity] = useState(1)
+
+  const [uploading, setUploading] = useState(false)
+  const [dragOver, setDragOver] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [orderRes, customersRes] = await Promise.all([
+          fetch(`/api/orders/${id}`),
+          fetch("/api/customers"),
+        ])
+        if (!orderRes.ok) {
+          if (orderRes.status === 404) {
+            router.push("/orders")
+            return
+          }
+          throw new Error("Eroare la încărcarea comenzii")
+        }
+        const orderData: Order = await orderRes.json()
+        setOrder(orderData)
+        setTitle(orderData.title)
+        setDescription(orderData.description || "")
+        setCustomerId(orderData.customerId)
+        setStatus(orderData.status)
+        setPriority(orderData.priority)
+        setDeadline(orderData.deadline ? orderData.deadline.split("T")[0] : "")
+        setNotes(orderData.notes || "")
+        setItems(orderData.items || [])
+        setFiles(orderData.files || [])
+
+        if (customersRes.ok) {
+          const customersData: Customer[] = await customersRes.json()
+          setCustomers(customersData)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Eroare la încărcare")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [id, router])
+
+  useEffect(() => {
+    if (!modalOpen || !searchQuery.trim()) {
+      setSearchResults([])
+      return
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await fetch(
+          `/api/products?search=${encodeURIComponent(searchQuery)}`
+        )
+        if (res.ok) {
+          const data: Product[] = await res.json()
+          setSearchResults(data)
+        }
+      } catch {
+        setSearchResults([])
+      } finally {
+        setSearching(false)
+      }
+    }, 300)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchQuery, modalOpen])
+
+  const customerOptions = [
+    { value: "", label: "Selectează clientul" },
+    ...customers.map((c) => ({ value: c.id, label: c.name })),
+  ]
+
+  const selectedCustomer = customers.find((c) => c.id === customerId)
+
+  function handleAddItem() {
+    if (!selectedProduct) return
+    const existingIndex = items.findIndex(
+      (i) => i.productId === selectedProduct.id
+    )
+    if (existingIndex >= 0) {
+      const updated = [...items]
+      const prev = updated[existingIndex]
+      updated[existingIndex] = {
+        ...prev,
+        quantity: prev.quantity + itemQuantity,
+        price: (prev.quantity + itemQuantity) * selectedProduct.basePrice,
+        basePrice: selectedProduct.basePrice,
+        productName: selectedProduct.name,
+      }
+      setItems(updated)
+    } else {
+      setItems([
+        ...items,
+        {
+          productId: selectedProduct.id,
+          productName: selectedProduct.name,
+          quantity: itemQuantity,
+          price: itemQuantity * selectedProduct.basePrice,
+          basePrice: selectedProduct.basePrice,
+        },
+      ])
+    }
+    setSelectedProduct(null)
+    setItemQuantity(1)
+    setSearchQuery("")
+    setSearchResults([])
+    setModalOpen(false)
+  }
+
+  function handleRemoveItem(index: number) {
+    setItems(items.filter((_, i) => i !== index))
+  }
+
+  function handleQuantityChange(index: number, qty: number) {
+    const updated = [...items]
+    const item = updated[index]
+    updated[index] = {
+      ...item,
+      quantity: qty,
+      price: qty * (item.basePrice || 0),
+    }
+    setItems(updated)
+  }
+
+  const itemsTotal = items.reduce((sum, i) => sum + i.price, 0)
+
+  async function uploadFile(file: File) {
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("orderId", id)
+      const res = await fetch("/api/files/upload", {
+        method: "POST",
+        body: formData,
+      })
+      if (!res.ok) throw new Error("Eroare la încărcarea fișierului")
+      const uploaded: OrderFile = await res.json()
+      setFiles((prev) => [...prev, uploaded])
+      setSuccess("Fișier încărcat cu succes")
+      setTimeout(() => setSuccess(""), 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Eroare la încărcarea fișierului")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) uploadFile(file)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    setDragOver(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault()
+    setDragOver(false)
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragOver(false)
+    const file = e.dataTransfer.files[0]
+    if (file) uploadFile(file)
+  }
+
+  async function handleSave(e?: React.FormEvent) {
+    if (e) e.preventDefault()
+    setError("")
+    setSuccess("")
+
+    if (!title.trim()) {
+      setError("Titlul este obligatoriu")
+      return
+    }
+    if (!customerId) {
+      setError("Clientul este obligatoriu")
+      return
+    }
+
+    setSaving(true)
+    try {
+      const body: Record<string, unknown> = {
+        title: title.trim(),
+        customerId,
+        status,
+        priority,
+        items: items.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+          price: i.price,
+        })),
+      }
+      if (description.trim()) body.description = description.trim()
+      if (deadline) body.deadline = new Date(deadline).toISOString()
+      if (notes.trim()) body.notes = notes.trim()
+
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Eroare la salvarea comenzii")
+      }
+      const updated: Order = await res.json()
+      setOrder(updated)
+      setSuccess("Comanda a fost salvată cu succes")
+      setTimeout(() => setSuccess(""), 3000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Eroare la salvare")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+      </div>
+    )
+  }
+
+  if (error && !order) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <p className="text-red-600">{error}</p>
+        <Button
+          variant="outline"
+          className="mt-3"
+          onClick={() => window.location.reload()}
+        >
+          Reîncearcă
+        </Button>
+      </div>
+    )
+  }
+
+  if (!order) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <p className="text-gray-500">Comanda nu a fost găsită</p>
+        <Link
+          href="/orders"
+          className="mt-2 text-sm font-medium text-blue-600 hover:underline"
+        >
+          Înapoi la comenzi
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => router.push("/orders")}>
+          ← Înapoi
+        </Button>
+        <h1 className="text-2xl font-bold text-gray-900">{order.title}</h1>
+        <Badge
+          className={cn(
+            STATUS_COLORS[order.status] ||
+              "bg-gray-100 text-gray-800 border-gray-300"
+          )}
+        >
+          {STATUS_LABELS[order.status] || order.status}
+        </Badge>
+      </div>
+
+      {success && (
+        <div className="rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {success}
+        </div>
+      )}
+
+      <Card>
+        <CardContent className="py-3">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
+            <span>Creată: {formatDateTime(order.createdAt)}</span>
+            {order.updatedAt && (
+              <span>Modificată: {formatDateTime(order.updatedAt)}</span>
+            )}
+            {order.createdBy && order.createdBy.name && (
+              <span>Creată de: {order.createdBy.name}</span>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-lg font-semibold">Detalii comandă</h2>
+        </CardHeader>
+        <CardContent>
+          <form id="order-form" onSubmit={handleSave} className="space-y-4">
+            {error && (
+              <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Titlu <span className="text-red-500">*</span>
+              </label>
+              <Input
+                placeholder="Denumire comandă"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Descriere
+              </label>
+              <Textarea
+                placeholder="Descrierea comenzii..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Client <span className="text-red-500">*</span>
+              </label>
+              <Select
+                options={customerOptions}
+                value={customerId}
+                onChange={(e) => setCustomerId(e.target.value)}
+                required
+              />
+              {selectedCustomer && (
+                <Link
+                  href={`/customers/${selectedCustomer.id}`}
+                  className="mt-1 inline-block text-sm text-blue-600 hover:underline"
+                >
+                  Vezi profilul clientului →
+                </Link>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Status
+                </label>
+                <Select
+                  options={STATUS_OPTIONS}
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                />
+                {status && (
+                  <div className="mt-1">
+                    <Badge className={cn("text-xs", STATUS_COLORS[status])}>
+                      {STATUS_LABELS[status]}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Prioritate
+                </label>
+                <Select
+                  options={PRIORITY_OPTIONS}
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value)}
+                />
+                {priority && (
+                  <div className="mt-1">
+                    <Badge className={cn("text-xs", PRIORITY_COLORS[priority])}>
+                      {PRIORITY_LABELS[priority]}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Termen limită
+                </label>
+                <Input
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Note interne
+              </label>
+              <Textarea
+                placeholder="Note suplimentare..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Produse comandate</h2>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => setModalOpen(true)}
+            >
+              + Adaugă produs
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {items.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-500">
+              Niciun produs adăugat
+            </p>
+          ) : (
+            <>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableHeaderCell>Produs</TableHeaderCell>
+                    <TableHeaderCell className="text-right">
+                      Preț unitar
+                    </TableHeaderCell>
+                    <TableHeaderCell className="text-right">
+                      Cantitate
+                    </TableHeaderCell>
+                    <TableHeaderCell className="text-right">
+                      Preț total
+                    </TableHeaderCell>
+                    <TableHeaderCell> </TableHeaderCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {items.map((item, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium text-gray-900">
+                        {item.productName || "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatPrice(item.basePrice || 0)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Input
+                          type="number"
+                          min={1}
+                          className="ml-auto w-20"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            handleQuantityChange(
+                              i,
+                              parseInt(e.target.value) || 1
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatPrice(item.price)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleRemoveItem(i)}
+                        >
+                          Șterge
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="mt-4 text-right text-lg font-bold text-gray-900">
+                Total: {formatPrice(itemsTotal)}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-lg font-semibold">Fișiere atașate</h2>
+        </CardHeader>
+        <CardContent>
+          <div
+            className={cn(
+              "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
+              dragOver
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-300 bg-gray-50"
+            )}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            <p className="mb-2 text-sm text-gray-500">
+              Trageți un fișier aici sau
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+            >
+              {uploading ? "Se încarcă..." : "Alege fișier"}
+            </Button>
+          </div>
+
+          {files.length > 0 && (
+            <div className="mt-4">
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableHeaderCell>Nume fișier</TableHeaderCell>
+                    <TableHeaderCell>Dimensiune</TableHeaderCell>
+                    <TableHeaderCell>Data</TableHeaderCell>
+                    <TableHeaderCell> </TableHeaderCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {files.map((file) => (
+                    <TableRow key={file.id}>
+                      <TableCell className="font-medium text-gray-900">
+                        {file.name}
+                      </TableCell>
+                      <TableCell className="text-gray-500">
+                        {formatFileSize(file.size)}
+                      </TableCell>
+                      <TableCell className="text-gray-500">
+                        {formatDate(file.createdAt)}
+                      </TableCell>
+                      <TableCell>
+                        <a
+                          href={`/api/files/serve/${file.id}`}
+                          className="text-sm font-medium text-blue-600 hover:underline"
+                          download
+                        >
+                          Descarcă
+                        </a>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="flex items-center justify-end gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.push("/orders")}
+          disabled={saving}
+        >
+          Anulează
+        </Button>
+        <Button
+          type="submit"
+          form="order-form"
+          disabled={saving}
+        >
+          {saving ? "Se salvează..." : "Salvează"}
+        </Button>
+      </div>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => {
+          setModalOpen(false)
+          setSelectedProduct(null)
+          setSearchQuery("")
+          setSearchResults([])
+          setItemQuantity(1)
+        }}
+        title="Adaugă produs"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Caută produs
+            </label>
+            <Input
+              placeholder="Nume produs..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setSelectedProduct(null)
+              }}
+            />
+          </div>
+
+          {searching && (
+            <div className="flex items-center justify-center py-4">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+            </div>
+          )}
+
+          {!searching && searchQuery.trim() && searchResults.length === 0 && (
+            <p className="py-4 text-center text-sm text-gray-500">
+              Niciun produs găsit
+            </p>
+          )}
+
+          {searchResults.length > 0 && (
+            <div className="max-h-48 space-y-0 overflow-y-auto rounded-md border">
+              {searchResults.map((product) => (
+                <button
+                  key={product.id}
+                  type="button"
+                  className={cn(
+                    "w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50",
+                    selectedProduct?.id === product.id && "bg-blue-50"
+                  )}
+                  onClick={() => setSelectedProduct(product)}
+                >
+                  <span className="font-medium text-gray-900">
+                    {product.name}
+                  </span>
+                  <span className="ml-2 text-gray-500">
+                    ({formatPrice(product.basePrice)})
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {selectedProduct && (
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
+              <p className="font-medium text-gray-900">
+                {selectedProduct.name}
+              </p>
+              <p className="text-sm text-gray-500">
+                Preț unitar: {formatPrice(selectedProduct.basePrice)}
+              </p>
+              <div className="mt-2 flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700">
+                  Cantitate:
+                </label>
+                <Input
+                  type="number"
+                  min={1}
+                  className="w-24"
+                  value={itemQuantity}
+                  onChange={(e) =>
+                    setItemQuantity(parseInt(e.target.value) || 1)
+                  }
+                />
+                <span className="text-sm text-gray-500">
+                  Total: {formatPrice(itemQuantity * selectedProduct.basePrice)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={handleAddItem}
+              disabled={!selectedProduct || itemQuantity < 1}
+            >
+              Adaugă în comandă
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  )
+}

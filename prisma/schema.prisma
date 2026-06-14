@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("EMPLOYEE")
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  orders       Order[]  @relation("CreatedBy")
+
+  @@map("users")
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  company   String?
+  phone     String?
+  email     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  orders    Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id          String    @id @default(uuid())
+  customerId  String    @map("customer_id")
+  createdById String    @map("created_by")
+  title       String
+  description String?
+  status      String    @default("NOU")
+  priority    String    @default("MEDIUM")
+  deadline    DateTime?
+  totalPrice  Float     @default(0) @map("total_price")
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  customer    Customer  @relation(fields: [customerId], references: [id])
+  createdBy   User      @relation("CreatedBy", fields: [createdById], references: [id])
+  items       OrderItem[]
+  files       File[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String  @map("order_id")
+  productId String  @map("product_id")
+  quantity  Int     @default(1)
+  price     Float
+
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Product {
+  id            String  @id @default(uuid())
+  category      String
+  subcategory   String?
+  name          String
+  format        String?
+  quantityRange String?  @map("quantity_range")
+  unit          String
+  basePrice     Float   @map("base_price")
+  active        Boolean @default(true)
+  notes         String?
+
+  orderItems    OrderItem[]
+
+  @@map("products")
+}
+
+model File {
+  id         String   @id @default(uuid())
+  orderId    String   @map("order_id")
+  filename   String
+  path       String
+  mimetype   String
+  size       Int
+  uploadedBy String   @map("uploaded_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("files")
+}
