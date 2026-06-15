@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Select } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Modal } from "@/components/ui/modal"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import {
@@ -42,6 +42,8 @@ interface OrderFile {
   id: string
   name: string
   size: number
+  mimetype: string
+  path: string
   createdAt: string
 }
 
@@ -145,8 +147,41 @@ export function OrderDetail() {
         setPriority(orderData.priority)
         setDeadline(orderData.deadline ? orderData.deadline.split("T")[0] : "")
         setNotes(orderData.notes || "")
-        setItems(orderData.items || [])
-        setFiles(orderData.files || [])
+        const rawItems = orderData.items as unknown as {
+          id: string
+          productId: string
+          quantity: number
+          price: number
+          product?: { name?: string; basePrice?: number }
+        }[]
+        setItems(
+          rawItems.map((item) => ({
+            productId: item.productId,
+            productName: item.product?.name,
+            quantity: item.quantity,
+            price: item.price,
+            basePrice: item.product?.basePrice,
+            id: item.id,
+          }))
+        )
+        const rawFiles = orderData.files as unknown as {
+          id: string
+          filename: string
+          size: number
+          mimetype: string
+          path: string
+          createdAt: string
+        }[]
+        setFiles(
+          rawFiles.map((f) => ({
+            id: f.id,
+            name: f.filename,
+            size: f.size,
+            mimetype: f.mimetype,
+            path: f.path,
+            createdAt: f.createdAt,
+          }))
+        )
 
         if (customersRes.ok) {
           const customersData: Customer[] = await customersRes.json()
@@ -258,8 +293,18 @@ export function OrderDetail() {
         body: formData,
       })
       if (!res.ok) throw new Error("Eroare la încărcarea fișierului")
-      const uploaded: OrderFile = await res.json()
-      setFiles((prev) => [...prev, uploaded])
+      const uploaded: Record<string, unknown> = await res.json()
+      setFiles((prev) => [
+        ...prev,
+        {
+          id: uploaded.id as string,
+          name: uploaded.filename as string,
+          size: uploaded.size as number,
+          mimetype: uploaded.mimetype as string,
+          path: uploaded.path as string,
+          createdAt: uploaded.createdAt as string,
+        },
+      ])
       setSuccess("Fișier încărcat cu succes")
       setTimeout(() => setSuccess(""), 3000)
     } catch (err) {
@@ -403,300 +448,338 @@ export function OrderDetail() {
         </div>
       )}
 
-      <Card>
-        <CardContent className="py-3">
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
-            <span>Creată: {formatDateTime(order.createdAt)}</span>
-            {order.updatedAt && (
-              <span>Modificată: {formatDateTime(order.updatedAt)}</span>
-            )}
-            {order.createdBy && order.createdBy.name && (
-              <span>Creată de: {order.createdBy.name}</span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold">Detalii comandă</h2>
-        </CardHeader>
-        <CardContent>
-          <form id="order-form" onSubmit={handleSave} className="space-y-4">
-            {error && (
-              <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {error}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5 xl:grid-cols-3">
+        <div className="space-y-6 lg:col-span-3 xl:col-span-1">
+          <Card>
+            <CardContent className="py-3">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
+                <span>Creată: {formatDateTime(order.createdAt)}</span>
+                {order.updatedAt && (
+                  <span>Modificată: {formatDateTime(order.updatedAt)}</span>
+                )}
+                {order.createdBy && order.createdBy.name && (
+                  <span>Creată de: {order.createdBy.name}</span>
+                )}
               </div>
-            )}
+            </CardContent>
+          </Card>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Titlu <span className="text-red-500">*</span>
-              </label>
-              <Input
-                placeholder="Denumire comandă"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-            </div>
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold">Detalii comandă</h2>
+            </CardHeader>
+            <CardContent>
+              <form id="order-form" onSubmit={handleSave} className="space-y-4">
+                {error && (
+                  <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {error}
+                  </div>
+                )}
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Descriere
-              </label>
-              <Textarea
-                placeholder="Descrierea comenzii..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-              />
-            </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Titlu <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="Denumire comandă"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                  />
+                </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Client <span className="text-red-500">*</span>
-              </label>
-              <Select
-                options={customerOptions}
-                value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                required
-              />
-              {selectedCustomer && (
-                <Link
-                  href={`/customers/${selectedCustomer.id}`}
-                  className="mt-1 inline-block text-sm text-blue-600 hover:underline"
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Descriere
+                  </label>
+                  <Textarea
+                    placeholder="Descrierea comenzii..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Client <span className="text-red-500">*</span>
+                  </label>
+                  <Combobox
+                    options={customerOptions}
+                    value={customerId}
+                    placeholder="Selectează clientul"
+                    onChange={(v) => setCustomerId(v)}
+                    required
+                  />
+                  {selectedCustomer && (
+                    <Link
+                      href={`/customers/${selectedCustomer.id}`}
+                      className="mt-1 inline-block text-sm text-blue-600 hover:underline"
+                    >
+                      Vezi profilul clientului →
+                    </Link>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      Status
+                    </label>
+                    <Combobox
+                      options={STATUS_OPTIONS}
+                      value={status}
+                      placeholder="Selectează statusul"
+                      onChange={(v) => setStatus(v)}
+                    />
+                    {status && (
+                      <div className="mt-1">
+                        <Badge className={cn("text-xs", STATUS_COLORS[status])}>
+                          {STATUS_LABELS[status]}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      Prioritate
+                    </label>
+                    <Combobox
+                      options={PRIORITY_OPTIONS}
+                      value={priority}
+                      placeholder="Selectează prioritatea"
+                      onChange={(v) => setPriority(v)}
+                    />
+                    {priority && (
+                      <div className="mt-1">
+                        <Badge className={cn("text-xs", PRIORITY_COLORS[priority])}>
+                          {PRIORITY_LABELS[priority]}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      Termen limită
+                    </label>
+                    <Input
+                      type="date"
+                      value={deadline}
+                      onChange={(e) => setDeadline(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                    Note interne
+                  </label>
+                  <Textarea
+                    placeholder="Note suplimentare..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-2 xl:col-span-1">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Produse comandate</h2>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setModalOpen(true)}
                 >
-                  Vezi profilul clientului →
-                </Link>
+                  + Adaugă produs
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {items.length === 0 ? (
+                <p className="py-8 text-center text-sm text-gray-500">
+                  Niciun produs adăugat
+                </p>
+              ) : (
+                <>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableHeaderCell>Produs</TableHeaderCell>
+                        <TableHeaderCell className="text-right">
+                          Preț unitar
+                        </TableHeaderCell>
+                        <TableHeaderCell className="text-right">
+                          Cantitate
+                        </TableHeaderCell>
+                        <TableHeaderCell className="text-right">
+                          Preț total
+                        </TableHeaderCell>
+                        <TableHeaderCell> </TableHeaderCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {items.map((item, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium text-gray-900">
+                            {item.productName || "—"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatPrice(item.basePrice || 0)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Input
+                              type="number"
+                              min={1}
+                              className="ml-auto w-20"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleQuantityChange(
+                                  i,
+                                  parseInt(e.target.value) || 1
+                                )
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            {formatPrice(item.price)}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleRemoveItem(i)}
+                            >
+                              Șterge
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <div className="mt-4 text-right text-lg font-bold text-gray-900">
+                    Total: {formatPrice(itemsTotal)}
+                  </div>
+                </>
               )}
-            </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Status
-                </label>
-                <Select
-                  options={STATUS_OPTIONS}
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                />
-                {status && (
-                  <div className="mt-1">
-                    <Badge className={cn("text-xs", STATUS_COLORS[status])}>
-                      {STATUS_LABELS[status]}
-                    </Badge>
-                  </div>
+        <div className="lg:col-span-5 xl:col-span-1">
+          <Card>
+            <CardHeader>
+              <h2 className="text-lg font-semibold">Fișiere atașate</h2>
+            </CardHeader>
+            <CardContent>
+              <div
+                className={cn(
+                  "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
+                  dragOver
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 bg-gray-50"
                 )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Prioritate
-                </label>
-                <Select
-                  options={PRIORITY_OPTIONS}
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value)}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <p className="mb-2 text-sm text-gray-500">
+                  Trageți un fișier aici sau
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileSelect}
                 />
-                {priority && (
-                  <div className="mt-1">
-                    <Badge className={cn("text-xs", PRIORITY_COLORS[priority])}>
-                      {PRIORITY_LABELS[priority]}
-                    </Badge>
-                  </div>
-                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  {uploading ? "Se încarcă..." : "Alege fișier"}
+                </Button>
               </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Termen limită
-                </label>
-                <Input
-                  type="date"
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
-                />
-              </div>
-            </div>
+              {files.length > 0 && (
+                <div className="mt-4">
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableHeaderCell>Nume fișier</TableHeaderCell>
+                        <TableHeaderCell>Dimensiune</TableHeaderCell>
+                        <TableHeaderCell>Data</TableHeaderCell>
+                        <TableHeaderCell> </TableHeaderCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {files.map((file) => {
+                        const serveUrl = `/api/files/serve/${file.path.replace(/^uploads\//, "")}`
+                        const isImage = file.mimetype.startsWith("image/")
+                        const isPdf = file.mimetype === "application/pdf"
 
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Note interne
-              </label>
-              <Textarea
-                placeholder="Note suplimentare..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Produse comandate</h2>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setModalOpen(true)}
-            >
-              + Adaugă produs
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {items.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500">
-              Niciun produs adăugat
-            </p>
-          ) : (
-            <>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableHeaderCell>Produs</TableHeaderCell>
-                    <TableHeaderCell className="text-right">
-                      Preț unitar
-                    </TableHeaderCell>
-                    <TableHeaderCell className="text-right">
-                      Cantitate
-                    </TableHeaderCell>
-                    <TableHeaderCell className="text-right">
-                      Preț total
-                    </TableHeaderCell>
-                    <TableHeaderCell> </TableHeaderCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {items.map((item, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium text-gray-900">
-                        {item.productName || "—"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatPrice(item.basePrice || 0)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Input
-                          type="number"
-                          min={1}
-                          className="ml-auto w-20"
-                          value={item.quantity}
-                          onChange={(e) =>
-                            handleQuantityChange(
-                              i,
-                              parseInt(e.target.value) || 1
-                            )
-                          }
-                        />
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatPrice(item.price)}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => handleRemoveItem(i)}
-                        >
-                          Șterge
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="mt-4 text-right text-lg font-bold text-gray-900">
-                Total: {formatPrice(itemsTotal)}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold">Fișiere atașate</h2>
-        </CardHeader>
-        <CardContent>
-          <div
-            className={cn(
-              "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
-              dragOver
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-300 bg-gray-50"
-            )}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <p className="mb-2 text-sm text-gray-500">
-              Trageți un fișier aici sau
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={handleFileSelect}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-            >
-              {uploading ? "Se încarcă..." : "Alege fișier"}
-            </Button>
-          </div>
-
-          {files.length > 0 && (
-            <div className="mt-4">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableHeaderCell>Nume fișier</TableHeaderCell>
-                    <TableHeaderCell>Dimensiune</TableHeaderCell>
-                    <TableHeaderCell>Data</TableHeaderCell>
-                    <TableHeaderCell> </TableHeaderCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {files.map((file) => (
-                    <TableRow key={file.id}>
-                      <TableCell className="font-medium text-gray-900">
-                        {file.name}
-                      </TableCell>
-                      <TableCell className="text-gray-500">
-                        {formatFileSize(file.size)}
-                      </TableCell>
-                      <TableCell className="text-gray-500">
-                        {formatDate(file.createdAt)}
-                      </TableCell>
-                      <TableCell>
-                        <a
-                          href={`/api/files/serve/${file.id}`}
-                          className="text-sm font-medium text-blue-600 hover:underline"
-                          download
-                        >
-                          Descarcă
-                        </a>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                        return (
+                          <TableRow key={file.id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                {isImage ? (
+                                  <img
+                                    src={serveUrl}
+                                    alt={file.name}
+                                    className="h-10 w-10 rounded border border-gray-200 object-cover"
+                                  />
+                                ) : isPdf ? (
+                                  <div className="flex h-10 w-10 items-center justify-center rounded border border-gray-200 bg-red-50 text-xs font-bold text-red-600">
+                                    PDF
+                                  </div>
+                                ) : (
+                                  <div className="flex h-10 w-10 items-center justify-center rounded border border-gray-200 bg-gray-50 text-xs text-gray-400">
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                                    </svg>
+                                  </div>
+                                )}
+                                <span className="font-medium text-gray-900">
+                                  {file.name}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-gray-500">
+                              {formatFileSize(file.size)}
+                            </TableCell>
+                            <TableCell className="text-gray-500">
+                              {formatDate(file.createdAt)}
+                            </TableCell>
+                            <TableCell>
+                              <a
+                                href={serveUrl}
+                                className="text-sm font-medium text-blue-600 hover:underline"
+                                download
+                              >
+                                Descarcă
+                              </a>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <div className="flex items-center justify-end gap-3">
         <Button

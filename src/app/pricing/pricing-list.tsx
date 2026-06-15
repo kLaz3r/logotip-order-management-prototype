@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Modal } from "@/components/ui/modal"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -220,10 +220,11 @@ export function PricingList() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-sm"
         />
-        <Select
+        <Combobox
           options={categoryOptions}
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
+          placeholder="Toate categoriile"
+          onChange={(v) => setCategoryFilter(v)}
           className="sm:max-w-[220px]"
         />
       </div>

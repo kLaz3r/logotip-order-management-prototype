@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Select } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import {
   Table,
   TableHead,
@@ -81,10 +81,11 @@ export function OrdersList() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-sm"
         />
-        <Select
+        <Combobox
           options={STATUS_OPTIONS}
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
+          placeholder="Toate statusurile"
+          onChange={(v) => setStatus(v)}
           className="sm:max-w-[200px]"
         />
       </div>

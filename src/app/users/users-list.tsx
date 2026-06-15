@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Modal } from "@/components/ui/modal"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -282,10 +282,11 @@ export function UsersList() {
             <label className="mb-1 block text-sm font-medium text-gray-700">
               Rol
             </label>
-            <Select
+            <Combobox
               options={ROLE_OPTIONS}
               value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
+              placeholder="Selectează rolul"
+              onChange={(v) => setNewRole(v)}
             />
           </div>
 
