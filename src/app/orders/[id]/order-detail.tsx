@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -35,6 +35,7 @@ interface OrderItem {
   productName?: string
   quantity: number
   price: number
+  unitPrice: number
   basePrice?: number
 }
 
@@ -73,6 +74,10 @@ interface Product {
   id: string
   name: string
   basePrice: number
+  category: string
+  unit: string
+  quantityRange: string | null
+  notes: string | null
 }
 
 function formatFileSize(bytes: number): string {
@@ -114,15 +119,14 @@ export function OrderDetail() {
 
   const [modalOpen, setModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState<Product[]>([])
-  const [searching, setSearching] = useState(false)
+  const [allProducts, setAllProducts] = useState<Product[]>([])
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
-  const [itemQuantity, setItemQuantity] = useState(1)
+  const [itemQuantity, setItemQuantity] = useState<number>(1)
+  const [itemUnitPrice, setItemUnitPrice] = useState(0)
 
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     async function fetchData() {
@@ -160,6 +164,7 @@ export function OrderDetail() {
             productName: item.product?.name,
             quantity: item.quantity,
             price: item.price,
+            unitPrice: item.quantity > 0 ? item.price / item.quantity : (item.product?.basePrice ?? 0),
             basePrice: item.product?.basePrice,
             id: item.id,
           }))
@@ -196,32 +201,56 @@ export function OrderDetail() {
     fetchData()
   }, [id, router])
 
-  useEffect(() => {
-    if (!modalOpen || !searchQuery.trim()) {
-      setSearchResults([])
-      return
-    }
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(async () => {
-      setSearching(true)
-      try {
-        const res = await fetch(
-          `/api/products?search=${encodeURIComponent(searchQuery)}`
-        )
-        if (res.ok) {
-          const data: Product[] = await res.json()
-          setSearchResults(data)
-        }
-      } catch {
-        setSearchResults([])
-      } finally {
-        setSearching(false)
+  function fuzzyScore(query: string, target: string): number {
+    query = query.toLowerCase()
+    target = target.toLowerCase()
+    if (target.includes(query)) return query.length * 2 + 10
+    let qi = 0
+    let score = 0
+    let consecutive = 0
+    for (let ti = 0; ti < target.length && qi < query.length; ti++) {
+      if (target[ti] === query[qi]) {
+        score += 1 + consecutive * 2
+        consecutive++
+        if (ti === 0 || target[ti - 1] === " ") score += 3
+        qi++
+      } else {
+        consecutive = 0
       }
-    }, 300)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [searchQuery, modalOpen])
+    if (qi < query.length) return 0
+    return score
+  }
+
+  const searchResults = useMemo(() => {
+    if (!modalOpen || !searchQuery.trim()) return []
+    const query = searchQuery.trim()
+    return allProducts
+      .map((p) => ({
+        product: p,
+        score: Math.max(
+          fuzzyScore(query, p.name),
+          fuzzyScore(query, p.category)
+        ),
+      }))
+      .filter((s) => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 20)
+      .map((s) => s.product)
+  }, [searchQuery, modalOpen, allProducts])
+
+  async function fetchAllProducts() {
+    if (allProducts.length > 0) return
+    try {
+      const res = await fetch("/api/products?active=true")
+      if (res.ok) {
+        const data: Product[] = await res.json()
+        setAllProducts(data)
+      }
+    } catch {
+      setAllProducts([])
+    }
+  }
 
   const customerOptions = [
     { value: "", label: "Selectează clientul" },
@@ -241,7 +270,8 @@ export function OrderDetail() {
       updated[existingIndex] = {
         ...prev,
         quantity: prev.quantity + itemQuantity,
-        price: (prev.quantity + itemQuantity) * selectedProduct.basePrice,
+        price: (prev.quantity + itemQuantity) * itemUnitPrice,
+        unitPrice: itemUnitPrice,
         basePrice: selectedProduct.basePrice,
         productName: selectedProduct.name,
       }
@@ -253,15 +283,16 @@ export function OrderDetail() {
           productId: selectedProduct.id,
           productName: selectedProduct.name,
           quantity: itemQuantity,
-          price: itemQuantity * selectedProduct.basePrice,
+          price: itemQuantity * itemUnitPrice,
+          unitPrice: itemUnitPrice,
           basePrice: selectedProduct.basePrice,
         },
       ])
     }
     setSelectedProduct(null)
     setItemQuantity(1)
+    setItemUnitPrice(0)
     setSearchQuery("")
-    setSearchResults([])
     setModalOpen(false)
   }
 
@@ -272,10 +303,22 @@ export function OrderDetail() {
   function handleQuantityChange(index: number, qty: number) {
     const updated = [...items]
     const item = updated[index]
+    const unitPrice = item.unitPrice || item.basePrice || 0
     updated[index] = {
       ...item,
       quantity: qty,
-      price: qty * (item.basePrice || 0),
+      price: qty * unitPrice,
+    }
+    setItems(updated)
+  }
+
+  function handleUnitPriceChange(index: number, newUnitPrice: number) {
+    const updated = [...items]
+    const item = updated[index]
+    updated[index] = {
+      ...item,
+      unitPrice: newUnitPrice,
+      price: item.quantity * newUnitPrice,
     }
     setItems(updated)
   }
@@ -448,8 +491,8 @@ export function OrderDetail() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5 xl:grid-cols-3">
-        <div className="space-y-6 lg:col-span-3 xl:col-span-1">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
           <Card>
             <CardContent className="py-3">
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
@@ -588,7 +631,7 @@ export function OrderDetail() {
           </Card>
         </div>
 
-        <div className="lg:col-span-2 xl:col-span-1">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -596,7 +639,10 @@ export function OrderDetail() {
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => setModalOpen(true)}
+                  onClick={() => {
+                    setModalOpen(true)
+                    fetchAllProducts()
+                  }}
                 >
                   + Adaugă produs
                 </Button>
@@ -632,18 +678,31 @@ export function OrderDetail() {
                             {item.productName || "—"}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatPrice(item.basePrice || 0)}
+                            <Input
+                              type="number"
+                              min={0}
+                              step={0.01}
+                              className="ml-auto w-24"
+                              value={item.unitPrice}
+                              onChange={(e) =>
+                                handleUnitPriceChange(
+                                  i,
+                                  parseFloat(e.target.value) || 0
+                                )
+                              }
+                            />
                           </TableCell>
                           <TableCell className="text-right">
                             <Input
                               type="number"
-                              min={1}
+                              min={0.01}
+                              step={0.01}
                               className="ml-auto w-20"
                               value={item.quantity}
                               onChange={(e) =>
                                 handleQuantityChange(
                                   i,
-                                  parseInt(e.target.value) || 1
+                                  parseFloat(e.target.value) || 0.01
                                 )
                               }
                             />
@@ -672,9 +731,7 @@ export function OrderDetail() {
               )}
             </CardContent>
           </Card>
-        </div>
 
-        <div className="lg:col-span-5 xl:col-span-1">
           <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold">Fișiere atașate</h2>
@@ -716,7 +773,7 @@ export function OrderDetail() {
                   <Table>
                     <TableHead>
                       <TableRow>
-                        <TableHeaderCell>Nume fișier</TableHeaderCell>
+                        <TableHeaderCell className="min-w-[200px]">Nume fișier</TableHeaderCell>
                         <TableHeaderCell>Dimensiune</TableHeaderCell>
                         <TableHeaderCell>Data</TableHeaderCell>
                         <TableHeaderCell> </TableHeaderCell>
@@ -730,7 +787,7 @@ export function OrderDetail() {
 
                         return (
                           <TableRow key={file.id}>
-                            <TableCell>
+                            <TableCell className="min-w-[200px]">
                               <div className="flex items-center gap-3">
                                 {isImage ? (
                                   <img
@@ -805,8 +862,8 @@ export function OrderDetail() {
           setModalOpen(false)
           setSelectedProduct(null)
           setSearchQuery("")
-          setSearchResults([])
           setItemQuantity(1)
+          setItemUnitPrice(0)
         }}
         title="Adaugă produs"
       >
@@ -825,13 +882,7 @@ export function OrderDetail() {
             />
           </div>
 
-          {searching && (
-            <div className="flex items-center justify-center py-4">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-            </div>
-          )}
-
-          {!searching && searchQuery.trim() && searchResults.length === 0 && (
+          {searchQuery.trim() && searchResults.length === 0 && (
             <p className="py-4 text-center text-sm text-gray-500">
               Niciun produs găsit
             </p>
@@ -847,14 +898,24 @@ export function OrderDetail() {
                     "w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50",
                     selectedProduct?.id === product.id && "bg-blue-50"
                   )}
-                  onClick={() => setSelectedProduct(product)}
+                  onClick={() => {
+                    setSelectedProduct(product)
+                    setItemUnitPrice(product.basePrice)
+                  }}
                 >
-                  <span className="font-medium text-gray-900">
-                    {product.name}
-                  </span>
-                  <span className="ml-2 text-gray-500">
-                    ({formatPrice(product.basePrice)})
-                  </span>
+                  <div>
+                    <span className="font-medium text-gray-900">
+                      {product.name}
+                    </span>
+                    <span className="ml-2 text-gray-500">
+                      ({formatPrice(product.basePrice)}/{product.unit})
+                    </span>
+                  </div>
+                  {product.quantityRange && (
+                    <p className="text-xs text-gray-400">
+                      {product.quantityRange}
+                    </p>
+                  )}
                 </button>
               ))}
             </div>
@@ -866,23 +927,42 @@ export function OrderDetail() {
                 {selectedProduct.name}
               </p>
               <p className="text-sm text-gray-500">
-                Preț unitar: {formatPrice(selectedProduct.basePrice)}
+                {selectedProduct.quantityRange && (
+                  <span className="mr-3">{selectedProduct.quantityRange}</span>
+                )}
+                Preț bază: {formatPrice(selectedProduct.basePrice)}/{selectedProduct.unit}
               </p>
+              <div className="mt-2 flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700">
+                  Preț unitar:
+                </label>
+                <Input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  className="w-28"
+                  value={itemUnitPrice || ""}
+                  onChange={(e) =>
+                    setItemUnitPrice(parseFloat(e.target.value) || 0)
+                  }
+                />
+              </div>
               <div className="mt-2 flex items-center gap-3">
                 <label className="text-sm font-medium text-gray-700">
                   Cantitate:
                 </label>
                 <Input
                   type="number"
-                  min={1}
+                  min={0.01}
+                  step={0.01}
                   className="w-24"
                   value={itemQuantity}
                   onChange={(e) =>
-                    setItemQuantity(parseInt(e.target.value) || 1)
+                    setItemQuantity(parseFloat(e.target.value) || 0.01)
                   }
                 />
                 <span className="text-sm text-gray-500">
-                  Total: {formatPrice(itemQuantity * selectedProduct.basePrice)}
+                  Total: {formatPrice(itemQuantity * itemUnitPrice)}
                 </span>
               </div>
             </div>

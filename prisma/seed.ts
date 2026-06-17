@@ -48,16 +48,16 @@ const productsData = [
   { category: "Imprimare formate mari", name: "Tapet printabil", unit: "mp", basePrice: 95.00, notes: "de la 95 lei/mp" },
 
   // Imprimare / copiere ALB NEGRU planșe
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "A3", unit: "buc.", basePrice: 4.20 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "A3", unit: "buc.", basePrice: 4.70 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "A2", unit: "buc.", basePrice: 5.00 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "A2", unit: "buc.", basePrice: 5.50 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "A1", unit: "buc.", basePrice: 6.00 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "A1", unit: "buc.", basePrice: 6.50 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "A0", unit: "buc.", basePrice: 7.00 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "A0", unit: "buc.", basePrice: 7.50 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "E+", unit: "buc.", basePrice: 7.50 },
-  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "E+", unit: "buc.", basePrice: 8.50 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "A3", unit: "ml", basePrice: 4.20 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "A3", unit: "ml", basePrice: 4.70 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "A2", unit: "ml", basePrice: 5.00 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "A2", unit: "ml", basePrice: 5.50 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "A1", unit: "ml", basePrice: 6.00 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "A1", unit: "ml", basePrice: 6.50 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "A0", unit: "ml", basePrice: 7.00 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "A0", unit: "ml", basePrice: 7.50 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Imprimare planșe", format: "E+", unit: "ml", basePrice: 7.50 },
+  { category: "Imprimare / copiere ALB NEGRU planșe", name: "Copiere planșe", format: "E+", unit: "ml", basePrice: 8.50 },
 
   // Imprimare / copiere COLOR planșe mp.
   { category: "Imprimare / copiere COLOR planșe mp.", name: "Planșe color linii - imprimare", unit: "mp", basePrice: 34.00 },

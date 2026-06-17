@@ -22,8 +22,10 @@ interface Product {
   subcategory: string | null
   name: string
   format: string | null
+  quantityRange: string | null
   unit: string
   basePrice: number
+  notes: string | null
   active: boolean
 }
 
@@ -244,6 +246,7 @@ export function PricingList() {
               <TableHeaderCell>Categorie</TableHeaderCell>
               <TableHeaderCell>Nume</TableHeaderCell>
               <TableHeaderCell>Format</TableHeaderCell>
+              <TableHeaderCell>Cantitate</TableHeaderCell>
               <TableHeaderCell>Unitate</TableHeaderCell>
               <TableHeaderCell className="text-right">Preț bază</TableHeaderCell>
               <TableHeaderCell className="text-center">Activ</TableHeaderCell>
@@ -258,6 +261,9 @@ export function PricingList() {
                 </TableCell>
                 <TableCell className="text-gray-500">
                   {product.format || "—"}
+                </TableCell>
+                <TableCell className="text-gray-500">
+                  {product.quantityRange || "—"}
                 </TableCell>
                 <TableCell className="text-gray-500">{product.unit}</TableCell>
                 <TableCell className="text-right">
