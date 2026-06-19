@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSession, hashPassword } from "@/lib/auth"
+import { fuzzyMatch } from "@/lib/search"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const session = await getSession()
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json({ error: "Neautorizat" }, { status: 403 })
   }
+
+  const { searchParams } = request.nextUrl
+  const search = searchParams.get("search")
 
   const users = await prisma.user.findMany({
     select: {
@@ -20,6 +24,15 @@ export async function GET() {
     },
     orderBy: { name: "asc" },
   })
+
+  if (search) {
+    const filtered = users.filter(
+      (u) =>
+        fuzzyMatch(search, u.name) ||
+        fuzzyMatch(search, u.email)
+    )
+    return NextResponse.json(filtered)
+  }
 
   return NextResponse.json(users)
 }

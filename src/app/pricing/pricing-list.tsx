@@ -15,6 +15,7 @@ import {
   TableHeaderCell,
 } from "@/components/ui/table"
 import { formatPrice } from "@/lib/utils"
+import { fuzzyMatch } from "@/lib/search"
 
 interface Product {
   id: string
@@ -87,11 +88,16 @@ export function PricingList() {
       result = result.filter((p) => p.category === categoryFilter)
     }
     if (search.trim()) {
-      const q = search.toLowerCase()
+      const q = search.trim()
       result = result.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q)
+          fuzzyMatch(q, p.name) ||
+          fuzzyMatch(q, p.category) ||
+          (p.subcategory && fuzzyMatch(q, p.subcategory)) ||
+          (p.format && fuzzyMatch(q, p.format)) ||
+          (p.quantityRange && fuzzyMatch(q, p.quantityRange)) ||
+          fuzzyMatch(q, p.unit) ||
+          (p.notes && fuzzyMatch(q, p.notes))
       )
     }
     return result
@@ -217,7 +223,7 @@ export function PricingList() {
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
-          placeholder="Caută după nume sau categorie..."
+          placeholder="Caută după nume, categorie, format, unitate..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-sm"

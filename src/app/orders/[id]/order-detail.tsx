@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -28,6 +28,7 @@ import {
   PRIORITY_LABELS,
   PRIORITY_COLORS,
 } from "@/lib/utils"
+import { fuzzyScore } from "@/lib/search"
 
 interface OrderItem {
   id?: string
@@ -57,7 +58,7 @@ interface Order {
   deadline: string | null
   notes: string | null
   customerId: string
-  customer?: { id: string; name: string }
+  customer?: { id: string; name: string; phone?: string | null }
   items: OrderItem[]
   files: OrderFile[]
   createdAt: string
@@ -68,6 +69,7 @@ interface Order {
 interface Customer {
   id: string
   name: string
+  phone?: string | null
 }
 
 interface Product {
@@ -75,6 +77,8 @@ interface Product {
   name: string
   basePrice: number
   category: string
+  subcategory: string | null
+  format: string | null
   unit: string
   quantityRange: string | null
   notes: string | null
@@ -201,27 +205,6 @@ export function OrderDetail() {
     fetchData()
   }, [id, router])
 
-  function fuzzyScore(query: string, target: string): number {
-    query = query.toLowerCase()
-    target = target.toLowerCase()
-    if (target.includes(query)) return query.length * 2 + 10
-    let qi = 0
-    let score = 0
-    let consecutive = 0
-    for (let ti = 0; ti < target.length && qi < query.length; ti++) {
-      if (target[ti] === query[qi]) {
-        score += 1 + consecutive * 2
-        consecutive++
-        if (ti === 0 || target[ti - 1] === " ") score += 3
-        qi++
-      } else {
-        consecutive = 0
-      }
-    }
-    if (qi < query.length) return 0
-    return score
-  }
-
   const searchResults = useMemo(() => {
     if (!modalOpen || !searchQuery.trim()) return []
     const query = searchQuery.trim()
@@ -230,7 +213,11 @@ export function OrderDetail() {
         product: p,
         score: Math.max(
           fuzzyScore(query, p.name),
-          fuzzyScore(query, p.category)
+          fuzzyScore(query, p.category),
+          p.subcategory ? fuzzyScore(query, p.subcategory) : 0,
+          p.format ? fuzzyScore(query, p.format) : 0,
+          p.quantityRange ? fuzzyScore(query, p.quantityRange) : 0,
+          fuzzyScore(query, p.unit)
         ),
       }))
       .filter((s) => s.score > 0)
@@ -555,12 +542,25 @@ export function OrderDetail() {
                     required
                   />
                   {selectedCustomer && (
-                    <Link
-                      href={`/customers/${selectedCustomer.id}`}
-                      className="mt-1 inline-block text-sm text-blue-600 hover:underline"
-                    >
-                      Vezi profilul clientului →
-                    </Link>
+                    <div className="mt-1 flex items-center gap-3 text-sm">
+                      <Link
+                        href={`/customers/${selectedCustomer.id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Vezi profilul clientului →
+                      </Link>
+                      {selectedCustomer.phone && (
+                        <a
+                          href={`https://wa.me/${selectedCustomer.phone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-green-600 hover:underline"
+                        >
+                          <WhatsAppIcon className="h-4 w-4" />
+                          {selectedCustomer.phone}
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -695,8 +695,8 @@ export function OrderDetail() {
                           <TableCell className="text-right">
                             <Input
                               type="number"
-                              min={0.01}
-                              step={0.01}
+                              min={0}
+                              step={1}
                               className="ml-auto w-20"
                               value={item.quantity}
                               onChange={(e) =>
@@ -953,8 +953,8 @@ export function OrderDetail() {
                 </label>
                 <Input
                   type="number"
-                  min={0.01}
-                  step={0.01}
+                  min={0}
+                  step={1}
                   className="w-24"
                   value={itemQuantity}
                   onChange={(e) =>
@@ -980,5 +980,13 @@ export function OrderDetail() {
         </div>
       </Modal>
     </div>
+  )
+}
+
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
   )
 }

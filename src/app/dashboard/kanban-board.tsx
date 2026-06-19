@@ -14,6 +14,7 @@ import { CSS } from "@dnd-kit/utilities"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   cn,
   formatDate,
@@ -21,6 +22,7 @@ import {
   PRIORITY_LABELS,
   PRIORITY_COLORS,
 } from "@/lib/utils"
+import { fuzzyMatch } from "@/lib/search"
 
 interface KanbanOrder {
   id: string
@@ -55,6 +57,7 @@ export function KanbanBoard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeOrder, setActiveOrder] = useState<KanbanOrder | null>(null)
+  const [search, setSearch] = useState("")
   const initialised = useRef(false)
 
   const fetchOrders = useCallback(async () => {
@@ -119,7 +122,16 @@ export function KanbanBoard() {
   }
 
   function getOrdersByStatus(status: string): KanbanOrder[] {
-    return orders.filter((o) => o.status === status)
+    let filtered = orders.filter((o) => o.status === status)
+    if (search.trim()) {
+      const q = search.trim()
+      filtered = filtered.filter(
+        (o) =>
+          fuzzyMatch(q, o.title) ||
+          fuzzyMatch(q, o.customer.name)
+      )
+    }
+    return filtered
   }
 
   const totalOrders = orders.length
@@ -179,6 +191,13 @@ export function KanbanBoard() {
       <StatsHeader
         totalOrders={totalOrders}
         statusCounts={statusCounts}
+      />
+
+      <Input
+        placeholder="Caută după titlu sau client..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="sm:max-w-sm"
       />
 
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

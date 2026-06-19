@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react"
 import { cn } from "@/lib/utils"
+import { fuzzyMatch } from "@/lib/search"
 
 export interface ComboboxOption {
   value: string
@@ -18,15 +19,6 @@ interface ComboboxProps {
   required?: boolean
   onChange: (value: string) => void
   className?: string
-}
-
-function fuzzyMatch(text: string, query: string): boolean {
-  const lower = text.toLowerCase()
-  const q = query.toLowerCase().trim()
-  if (!q) return true
-
-  const tokens = q.split(/\s+/)
-  return tokens.every((token) => lower.includes(token))
 }
 
 export function Combobox({

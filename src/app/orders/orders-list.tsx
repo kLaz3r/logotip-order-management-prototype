@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -44,13 +44,14 @@ export function OrdersList() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("")
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (s: string, st: string) => {
     setLoading(true)
     try {
       const qs = new URLSearchParams()
-      if (search) qs.set("search", search)
-      if (status) qs.set("status", status)
+      if (s) qs.set("search", s)
+      if (st) qs.set("status", st)
       const res = await fetch(`/api/orders?${qs.toString()}`)
       if (!res.ok) throw new Error("Eroare la încărcare")
       setOrders(await res.json())
@@ -59,11 +60,17 @@ export function OrdersList() {
     } finally {
       setLoading(false)
     }
-  }, [search, status])
+  }, [])
 
   useEffect(() => {
-    fetchOrders()
-  }, [fetchOrders])
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      fetchOrders(search, status)
+    }, 150)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [search, status, fetchOrders])
 
   return (
     <div className="space-y-6">
@@ -76,7 +83,7 @@ export function OrdersList() {
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <Input
-          placeholder="Caută după titlu sau client..."
+          placeholder="Caută după titlu, client sau produs comandat..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-sm"

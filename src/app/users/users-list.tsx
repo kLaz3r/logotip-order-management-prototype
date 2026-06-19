@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Combobox } from "@/components/ui/combobox"
@@ -36,6 +36,8 @@ export function UsersList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [unauthorized, setUnauthorized] = useState(false)
+  const [search, setSearch] = useState("")
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
   const [showModal, setShowModal] = useState(false)
   const [newName, setNewName] = useState("")
@@ -45,25 +47,34 @@ export function UsersList() {
   const [addLoading, setAddLoading] = useState(false)
   const [addError, setAddError] = useState("")
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const res = await fetch("/api/users")
-        if (res.status === 403) {
-          setUnauthorized(true)
-          setLoading(false)
-          return
-        }
-        if (!res.ok) throw new Error("Eroare la încărcare")
-        setUsers(await res.json())
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Eroare la încărcare")
-      } finally {
+  const fetchUsers = useCallback(async (q: string) => {
+    try {
+      const qs = new URLSearchParams()
+      if (q) qs.set("search", q)
+      const res = await fetch(`/api/users?${qs.toString()}`)
+      if (res.status === 403) {
+        setUnauthorized(true)
         setLoading(false)
+        return
       }
+      if (!res.ok) throw new Error("Eroare la încărcare")
+      setUsers(await res.json())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Eroare la încărcare")
+    } finally {
+      setLoading(false)
     }
-    fetchUsers()
   }, [])
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      fetchUsers(search)
+    }, 150)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [search, fetchUsers])
 
   async function handleToggleActive(user: User) {
     try {
@@ -157,6 +168,13 @@ export function UsersList() {
           </button>
         </div>
       )}
+
+      <Input
+        placeholder="Caută după nume sau email..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="sm:max-w-sm"
+      />
 
       {loading ? (
         <div className="flex items-center justify-center py-20">

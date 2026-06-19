@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getSession } from "@/lib/auth"
+import { fuzzyMatch } from "@/lib/search"
 
 export async function GET(request: NextRequest) {
   const session = await getSession()
@@ -16,22 +17,36 @@ export async function GET(request: NextRequest) {
   const where: Record<string, unknown> = {}
   if (status) where.status = status
   if (customerId) where.customerId = customerId
-  if (search) {
-    where.OR = [
-      { title: { contains: search } },
-      { customer: { name: { contains: search } } },
-    ]
-  }
 
   const orders = await prisma.order.findMany({
     where,
     include: {
       customer: { select: { id: true, name: true } },
       createdBy: { select: { id: true, name: true } },
+      items: {
+        select: { product: { select: { name: true, category: true } } },
+      },
       _count: { select: { items: true, files: true } },
     },
     orderBy: { createdAt: "desc" },
   })
+
+  if (search) {
+    const filtered = orders.filter((o) => {
+      if (fuzzyMatch(search, o.title)) return true
+      if (fuzzyMatch(search, o.customer.name)) return true
+      if (
+        o.items.some(
+          (i) =>
+            fuzzyMatch(search, i.product.name) ||
+            fuzzyMatch(search, i.product.category)
+        )
+      )
+        return true
+      return false
+    })
+    return NextResponse.json(filtered)
+  }
 
   return NextResponse.json(orders)
 }
