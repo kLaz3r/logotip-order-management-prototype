@@ -140,9 +140,9 @@ export function UsersList() {
   if (unauthorized) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Utilizatori</h1>
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16">
-          <p className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-brand-purple">Utilizatori</h1>
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16 dark:border-gray-700 dark:bg-transparent">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Nu aveți permisiuni de administrator pentru a vizualiza utilizatorii
           </p>
         </div>
@@ -153,7 +153,7 @@ export function UsersList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Utilizatori</h1>
+        <h1 className="text-2xl font-bold text-brand-purple">Utilizatori</h1>
         <Button onClick={() => setShowModal(true)}>Utilizator nou</Button>
       </div>
 
@@ -178,7 +178,7 @@ export function UsersList() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-brand-purple" />
         </div>
       ) : users.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16">
@@ -199,10 +199,10 @@ export function UsersList() {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell className="font-medium text-gray-900">
+                <TableCell className="font-medium text-gray-900 dark:text-gray-100">
                   {user.name}
                 </TableCell>
-                <TableCell className="text-gray-500">{user.email}</TableCell>
+                <TableCell className="text-gray-500 dark:text-gray-400">{user.email}</TableCell>
                 <TableCell>
                   <Badge
                     className={cn(
@@ -234,7 +234,7 @@ export function UsersList() {
                 <TableCell className="text-right">
                   {user._count.orders}
                 </TableCell>
-                <TableCell className="text-gray-500">
+                <TableCell className="text-gray-500 dark:text-gray-400">
                   {formatDate(user.createdAt)}
                 </TableCell>
               </TableRow>
@@ -259,7 +259,7 @@ export function UsersList() {
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Nume <span className="text-red-500">*</span>
             </label>
             <Input
@@ -271,7 +271,7 @@ export function UsersList() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Email <span className="text-red-500">*</span>
             </label>
             <Input
@@ -284,7 +284,7 @@ export function UsersList() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Parolă <span className="text-red-500">*</span>
             </label>
             <Input
@@ -297,7 +297,7 @@ export function UsersList() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Rol
             </label>
             <Combobox

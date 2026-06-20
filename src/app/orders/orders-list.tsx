@@ -31,7 +31,7 @@ interface Order {
 }
 
 const STATUS_COLOR_VALUES: Record<string, string> = {
-  NOU: "#3b82f6",
+  NOU: "#386666",
   IN_LUCRU: "#eab308",
   ASTEAPTA_CLIENT: "#f97316",
   FINALIZAT: "#22c55e",
@@ -111,7 +111,7 @@ export function OrdersList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Comenzi</h1>
+        <h1 className="text-2xl font-bold text-brand-purple">Comenzi</h1>
         <Link href="/orders/new">
           <Button>Comandă nouă</Button>
         </Link>
@@ -130,8 +130,8 @@ export function OrdersList() {
             className={cn(
               "rounded-full px-3 py-1.5 text-sm font-medium transition-all",
               status === ""
-                ? "bg-gray-900 text-white shadow-sm"
-                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+                ? "bg-brand-purple text-white shadow-sm"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
             )}
           >
             Toate
@@ -147,7 +147,7 @@ export function OrdersList() {
                   "rounded-full px-3 py-1.5 text-sm font-medium transition-all flex items-center gap-1.5",
                   isActive
                     ? "text-white shadow-sm"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
                 )}
                 style={isActive ? { backgroundColor: color } : undefined}
               >
@@ -166,14 +166,14 @@ export function OrdersList() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-brand-purple" />
         </div>
       ) : orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16">
-          <p className="text-sm text-gray-500">Nicio comandă găsită</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16 dark:border-gray-700 dark:bg-transparent">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Nicio comandă găsită</p>
           <Link
             href="/orders/new"
-            className="mt-2 text-sm font-medium text-blue-600 hover:underline"
+            className="mt-2 text-sm font-medium text-brand-teal hover:underline"
           >
             Creează prima comandă
           </Link>
@@ -239,8 +239,8 @@ export function OrdersList() {
                 className="cursor-pointer"
                 onClick={() => router.push(`/orders/${order.id}`)}
               >
-                <TableCell className="font-medium text-gray-900">{order.title}</TableCell>
-                <TableCell>{order.customer.name}</TableCell>
+                <TableCell className="font-medium text-gray-900 dark:text-gray-100">{order.title}</TableCell>
+                <TableCell className="dark:text-gray-300">{order.customer.name}</TableCell>
                 <TableCell>
                   <Badge className={cn(STATUS_COLORS[order.status] || "bg-gray-100 text-gray-800 border-gray-300")}>
                     {STATUS_LABELS[order.status] || order.status}
@@ -251,20 +251,20 @@ export function OrdersList() {
                     {PRIORITY_LABELS[order.priority] || order.priority}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-gray-500">
+                <TableCell className="text-gray-500 dark:text-gray-400">
                   {formatDate(order.createdAt)}
                 </TableCell>
-                <TableCell className="text-gray-500">
+                <TableCell className="text-gray-500 dark:text-gray-400">
                   {order.deadline ? formatDate(order.deadline) : "—"}
                 </TableCell>
-                <TableCell className="text-right font-medium text-gray-900">
+                <TableCell className="text-right font-medium text-gray-900 dark:text-gray-100">
                   {formatPrice(order.totalPrice)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Link
                     href={`/orders/${order.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                    className="text-sm font-medium text-brand-teal hover:underline"
                   >
                     Detalii
                   </Link>

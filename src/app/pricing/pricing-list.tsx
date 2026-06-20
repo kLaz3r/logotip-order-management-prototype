@@ -218,7 +218,7 @@ export function PricingList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Listă prețuri</h1>
+        <h1 className="text-2xl font-bold text-brand-purple">Listă prețuri</h1>
         <Button onClick={() => setShowAddModal(true)}>Produs nou</Button>
       </div>
 
@@ -252,11 +252,11 @@ export function PricingList() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-brand-purple" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16">
-          <p className="text-sm text-gray-500">Niciun produs găsit</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16 dark:border-gray-700 dark:bg-transparent">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Niciun produs găsit</p>
         </div>
       ) : (
         <Table>
@@ -275,17 +275,17 @@ export function PricingList() {
           <TableBody>
             {filtered.map((product) => (
               <TableRow key={product.id}>
-                <TableCell className="text-gray-500">{product.category}</TableCell>
-                <TableCell className="font-medium text-gray-900">
-                  {product.name}
-                </TableCell>
-                <TableCell className="text-gray-500">
-                  {product.format || "—"}
-                </TableCell>
-                <TableCell className="text-gray-500">
-                  {product.quantityRange || "—"}
-                </TableCell>
-                <TableCell className="text-gray-500">{product.unit}</TableCell>
+              <TableCell className="text-gray-500 dark:text-gray-400">{product.category}</TableCell>
+              <TableCell className="font-medium text-gray-900 dark:text-gray-100">
+                {product.name}
+              </TableCell>
+              <TableCell className="text-gray-500 dark:text-gray-400">
+                {product.format || "—"}
+              </TableCell>
+              <TableCell className="text-gray-500 dark:text-gray-400">
+                {product.quantityRange || "—"}
+              </TableCell>
+              <TableCell className="text-gray-500 dark:text-gray-400">{product.unit}</TableCell>
                 <TableCell className="text-right">
                   {editingPriceId === product.id ? (
                     <div className="flex items-center justify-end gap-1">
@@ -295,7 +295,7 @@ export function PricingList() {
                         min="0"
                         value={editingPrice}
                         onChange={(e) => setEditingPrice(e.target.value)}
-                        className="w-24 rounded border border-gray-300 px-2 py-1 text-sm"
+                        className="w-24 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-[#1a1a24] dark:text-gray-100"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleSavePrice(product)
@@ -315,18 +315,18 @@ export function PricingList() {
                     </div>
                   ) : (
                     <span
-                      className="cursor-pointer font-medium text-blue-600 hover:underline"
+                      className="cursor-pointer font-medium text-brand-teal hover:underline"
                       onClick={() => startEditingPrice(product)}
                     >
                       {formatPrice(product.basePrice)}
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="text-gray-500">
-                  {product.options && product.options.length > 0
-                    ? `${product.options.length} opțiune${product.options.length > 1 ? "i" : ""}${product.optionType === "single" ? " (radio)" : ""}`
-                    : "—"}
-                </TableCell>
+              <TableCell className="text-gray-500 dark:text-gray-400">
+                {product.options && product.options.length > 0
+                  ? `${product.options.length} opțiune${product.options.length > 1 ? "i" : ""}${product.optionType === "single" ? " (radio)" : ""}`
+                  : "—"}
+              </TableCell>
                 <TableCell className="text-center">
                   <button
                     onClick={() => handleToggleActive(product)}
@@ -365,7 +365,7 @@ export function PricingList() {
           )}
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Categorie <span className="text-red-500">*</span>
             </label>
             <Input
@@ -377,7 +377,7 @@ export function PricingList() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Nume <span className="text-red-500">*</span>
             </label>
             <Input
@@ -389,7 +389,7 @@ export function PricingList() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Unitate <span className="text-red-500">*</span>
             </label>
             <Input
@@ -401,7 +401,7 @@ export function PricingList() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Preț bază (RON)
             </label>
             <Input
@@ -415,14 +415,14 @@ export function PricingList() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Opțiuni
             </label>
-            <p className="mb-2 text-xs text-gray-500">
+            <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
               Opțiunile adaugă la prețul unitar (ex: laminare, față/verso)
             </p>
             {newOptions.length === 0 ? (
-              <p className="py-2 text-sm text-gray-400">Nicio opțiune</p>
+              <p className="py-2 text-sm text-gray-400 dark:text-gray-500">Nicio opțiune</p>
             ) : (
               <div className="space-y-2">
                 {newOptions.map((opt, i) => (
@@ -474,13 +474,13 @@ export function PricingList() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               Tip opțiuni
             </label>
             <select
               value={newOptionType}
               onChange={(e) => setNewOptionType(e.target.value)}
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-[#1a1a24] dark:text-gray-100"
             >
               <option value="">Selectare multiplă (bifare)</option>
               <option value="single">Selectare unică (radio)</option>
@@ -492,7 +492,7 @@ export function PricingList() {
               type="checkbox"
               checked={newActive}
               onChange={(e) => setNewActive(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
             />
             Produs activ
           </label>

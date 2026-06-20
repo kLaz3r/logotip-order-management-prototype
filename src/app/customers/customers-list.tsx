@@ -58,7 +58,7 @@ export function CustomersList() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Clienți</h1>
+        <h1 className="text-2xl font-bold text-brand-purple">Clienți</h1>
         <Link href="/customers/new">
           <Button>Client nou</Button>
         </Link>
@@ -73,17 +73,17 @@ export function CustomersList() {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-brand-purple" />
         </div>
       ) : customers.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16">
-          <p className="text-sm text-gray-500">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white py-16 dark:border-gray-700 dark:bg-transparent">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {search.trim() ? "Niciun client găsit" : "Niciun client înregistrat"}
           </p>
           {!search.trim() && (
             <Link
               href="/customers/new"
-              className="mt-2 text-sm font-medium text-blue-600 hover:underline"
+              className="mt-2 text-sm font-medium text-brand-teal hover:underline"
             >
               Înregistrează primul client
             </Link>
@@ -108,13 +108,13 @@ export function CustomersList() {
                 className="cursor-pointer"
                 onClick={() => router.push(`/customers/${customer.id}`)}
               >
-                <TableCell className="font-medium text-gray-900">
+                <TableCell className="font-medium text-gray-900 dark:text-gray-100">
                   {customer.name}
                 </TableCell>
-                <TableCell className="text-gray-500">
+                <TableCell className="text-gray-500 dark:text-gray-400">
                   {customer.company || "—"}
                 </TableCell>
-                <TableCell className="text-gray-500">
+                <TableCell className="text-gray-500 dark:text-gray-400">
                   {customer.phone ? (
                     <a
                       href={`https://wa.me/${customer.phone.replace(/\D/g, "")}`}
@@ -130,7 +130,7 @@ export function CustomersList() {
                     "—"
                   )}
                 </TableCell>
-                <TableCell className="text-gray-500">
+                <TableCell className="text-gray-500 dark:text-gray-400">
                   {customer.email || "—"}
                 </TableCell>
                 <TableCell className="text-right">
@@ -140,7 +140,7 @@ export function CustomersList() {
                   <Link
                     href={`/customers/${customer.id}`}
                     onClick={(e) => e.stopPropagation()}
-                    className="text-sm font-medium text-blue-600 hover:underline"
+                    className="text-sm font-medium text-brand-teal hover:underline"
                   >
                     Editează
                   </Link>

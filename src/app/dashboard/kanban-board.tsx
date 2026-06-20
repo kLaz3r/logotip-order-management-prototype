@@ -45,7 +45,7 @@ const KANBAN_STATUSES = [
 ] as const
 
 const COLUMN_HEADER_COLORS: Record<string, string> = {
-  NOU: "bg-blue-500",
+  NOU: "bg-brand-teal",
   IN_LUCRU: "bg-yellow-500",
   ASTEAPTA_CLIENT: "bg-orange-500",
   FINALIZAT: "bg-green-500",
@@ -165,14 +165,14 @@ export function KanbanBoard() {
           {KANBAN_STATUSES.map((status) => (
             <div
               key={status}
-              className="rounded-lg border border-gray-200 bg-white p-4"
+              className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-[#1a1a24]"
             >
-              <div className="mb-3 h-5 w-24 animate-pulse rounded bg-gray-200" />
+              <div className="mb-3 h-5 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="h-24 animate-pulse rounded-lg bg-gray-100"
+                    className="h-24 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"
                   />
                 ))}
               </div>
@@ -203,8 +203,8 @@ export function KanbanBoard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Panou de control</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-xl font-bold text-brand-purple">Panou de control</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Gestionați comenzile prin tragere și plasare
         </p>
       </div>
@@ -216,15 +216,15 @@ export function KanbanBoard() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-sm"
         />
-        <div className="inline-flex rounded-md border border-gray-300 bg-gray-50 p-0.5">
+        <div className="inline-flex rounded-md border border-gray-300 bg-gray-50 p-0.5 dark:border-gray-600 dark:bg-white/[0.03]">
           <button
             type="button"
             onClick={() => setMyOrdersOnly(false)}
             className={cn(
               "rounded px-3 py-1.5 text-sm font-medium transition-colors",
               !myOrdersOnly
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-white text-gray-900 shadow-sm dark:bg-[#1a1a24] dark:text-gray-100"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             )}
           >
             Toate
@@ -235,8 +235,8 @@ export function KanbanBoard() {
             className={cn(
               "rounded px-3 py-1.5 text-sm font-medium transition-colors",
               myOrdersOnly
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+                ? "bg-white text-gray-900 shadow-sm dark:bg-[#1a1a24] dark:text-gray-100"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             )}
           >
             Ale mele
@@ -258,7 +258,7 @@ export function KanbanBoard() {
 
         <DragOverlay>
           {activeOrder && (
-            <div className="w-72 rotate-1 rounded-lg border-2 border-blue-400 bg-white p-3 shadow-xl">
+            <div className="w-72 rotate-1 rounded-lg border-2 border-brand-purple bg-white p-3 shadow-xl dark:bg-[#1a1a24]">
               <OrderCardContent order={activeOrder} />
             </div>
           )}
@@ -266,17 +266,17 @@ export function KanbanBoard() {
       </DndContext>
 
       {totalOrders === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 py-16">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 py-16 dark:border-gray-700">
           <span className="text-3xl">📋</span>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
             Nicio comandă
           </h3>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Creați o comandă nouă pentru a începe
           </p>
           <Link
             href="/orders/new"
-            className="mt-4 inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:border-gray-600 dark:bg-[#1a1a24] dark:text-gray-300 dark:hover:bg-white/5"
           >
             Comandă nouă
           </Link>
@@ -296,15 +296,15 @@ function KanbanColumn({
   count: number
 }) {
   return (
-    <div className="flex min-h-[200px] flex-col rounded-lg border border-gray-200 bg-gray-50">
+    <div className="flex min-h-[200px] flex-col rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-white/[0.02]">
       <div className="flex items-center gap-2 px-3 py-2">
         <div
           className={cn("h-2.5 w-2.5 rounded-full", COLUMN_HEADER_COLORS[status])}
         />
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           {STATUS_LABELS[status]}
         </h3>
-        <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-200 px-1.5 text-xs font-medium text-gray-600">
+        <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-gray-200 px-1.5 text-xs font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-400">
           {count}
         </span>
       </div>
@@ -314,8 +314,8 @@ function KanbanColumn({
             <DraggableCard key={order.id} id={order.id} order={order} />
           ))}
           {orders.length === 0 && (
-            <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 py-8">
-              <p className="text-xs text-gray-400">Trageți comenzi aici</p>
+            <div className="flex items-center justify-center rounded-lg border border-dashed border-gray-300 py-8 dark:border-gray-700">
+              <p className="text-xs text-gray-400 dark:text-gray-500">Trageți comenzi aici</p>
             </div>
           )}
         </div>
@@ -338,7 +338,7 @@ function DroppableColumn({
       ref={setNodeRef}
       className={cn(
         "flex-1 transition-colors",
-        isOver && "bg-blue-50"
+        isOver && "bg-brand-purple/10"
       )}
     >
       {children}
@@ -374,7 +374,7 @@ function DraggableCard({
       {...attributes}
       style={style}
       className={cn(
-        "block touch-none rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md",
+        "block touch-none rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-[#1a1a24]",
         isDragging && "opacity-50 shadow-lg"
       )}
     >
@@ -390,7 +390,7 @@ function OrderCardContent({ order }: { order: KanbanOrder }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-start justify-between gap-2">
-        <p className="truncate text-sm font-medium text-gray-900">
+        <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
           {order.title}
         </p>
         <Badge
@@ -403,24 +403,24 @@ function OrderCardContent({ order }: { order: KanbanOrder }) {
         </Badge>
       </div>
 
-      <p className="text-xs text-gray-500">{order.customer.name}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400">{order.customer.name}</p>
 
       <div className="flex items-center justify-between">
         {order.deadline ? (
           <span
             className={cn(
               "text-xs",
-              isOverdue ? "font-medium text-red-600" : "text-gray-500"
+              isOverdue ? "font-medium text-red-600" : "text-gray-500 dark:text-gray-400"
             )}
           >
             {isOverdue ? "⚠ " : ""}
             {formatDate(order.deadline)}
           </span>
         ) : (
-          <span className="text-xs text-gray-400">Fără termen</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">Fără termen</span>
         )}
         {order.createdBy.name && (
-          <span className="text-xs text-gray-400 truncate max-w-[100px]">
+          <span className="text-xs text-gray-400 truncate max-w-[100px] dark:text-gray-500">
             {order.createdBy.name}
           </span>
         )}

@@ -436,7 +436,7 @@ export function OrderDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-brand-purple" />
       </div>
     )
   }
@@ -459,10 +459,10 @@ export function OrderDetail() {
   if (!order) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <p className="text-gray-500">Comanda nu a fost găsită</p>
+        <p className="text-gray-500 dark:text-gray-400">Comanda nu a fost găsită</p>
         <Link
           href="/orders"
-          className="mt-2 text-sm font-medium text-blue-600 hover:underline"
+          className="mt-2 text-sm font-medium text-brand-teal hover:underline"
         >
           Înapoi la comenzi
         </Link>
@@ -476,7 +476,7 @@ export function OrderDetail() {
         <Button variant="ghost" size="sm" onClick={() => router.push("/orders")}>
           ← Înapoi
         </Button>
-        <h1 className="text-2xl font-bold text-gray-900">{order.title}</h1>
+        <h1 className="text-2xl font-bold text-brand-purple">{order.title}</h1>
         <Badge
           className={cn(
             STATUS_COLORS[order.status] ||
@@ -497,7 +497,7 @@ export function OrderDetail() {
         <div className="space-y-6">
           <Card>
             <CardContent className="py-3">
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500">
+                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-500 dark:text-gray-400">
                 <span>Creată: {formatDateTime(order.createdAt)}</span>
                 {order.updatedAt && (
                   <span>Modificată: {formatDateTime(order.updatedAt)}</span>
@@ -522,7 +522,7 @@ export function OrderDetail() {
                 )}
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Titlu <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -534,7 +534,7 @@ export function OrderDetail() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Descriere
                   </label>
                   <Textarea
@@ -546,7 +546,7 @@ export function OrderDetail() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Client <span className="text-red-500">*</span>
                   </label>
                   <Combobox
@@ -560,7 +560,7 @@ export function OrderDetail() {
                     <div className="mt-1 flex items-center gap-3 text-sm">
                       <Link
                         href={`/customers/${selectedCustomer.id}`}
-                        className="text-blue-600 hover:underline"
+                        className="text-brand-teal hover:underline"
                       >
                         Vezi profilul clientului →
                       </Link>
@@ -581,7 +581,7 @@ export function OrderDetail() {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Status
                     </label>
                     <Combobox
@@ -600,7 +600,7 @@ export function OrderDetail() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Prioritate
                     </label>
                     <Combobox
@@ -619,7 +619,7 @@ export function OrderDetail() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Termen limită
                     </label>
                     <Input
@@ -631,7 +631,7 @@ export function OrderDetail() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Note interne
                   </label>
                   <Textarea
@@ -665,7 +665,7 @@ export function OrderDetail() {
             </CardHeader>
             <CardContent>
               {items.length === 0 ? (
-                <p className="py-8 text-center text-sm text-gray-500">
+                <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                   Niciun produs adăugat
                 </p>
               ) : (
@@ -689,7 +689,7 @@ export function OrderDetail() {
                     <TableBody>
                       {items.map((item, i) => (
                         <TableRow key={i}>
-                          <TableCell className="font-medium text-gray-900">
+                          <TableCell className="font-medium text-gray-900 dark:text-gray-100">
                             {item.productName || "—"}
                             {item.selectedOptions && item.selectedOptions.length > 0 && (
                               <span className="ml-2 text-xs text-gray-400">
@@ -744,7 +744,7 @@ export function OrderDetail() {
                       ))}
                     </TableBody>
                   </Table>
-                  <div className="mt-4 text-right text-lg font-bold text-gray-900">
+                  <div className="mt-4 text-right text-lg font-bold text-gray-900 dark:text-gray-100">
                     Total: {formatPrice(itemsTotal)}
                   </div>
                 </>
@@ -761,14 +761,14 @@ export function OrderDetail() {
                 className={cn(
                   "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors",
                   dragOver
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-gray-300 bg-gray-50"
+                  ? "border-brand-purple bg-brand-purple/5 dark:bg-brand-purple/10"
+                  : "border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-white/[0.03]"
                 )}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
-                <p className="mb-2 text-sm text-gray-500">
+                <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                   Trageți un fișier aici sau
                 </p>
                 <input
@@ -820,27 +820,27 @@ export function OrderDetail() {
                                     PDF
                                   </div>
                                 ) : (
-                                  <div className="flex h-10 w-10 items-center justify-center rounded border border-gray-200 bg-gray-50 text-xs text-gray-400">
+                                  <div className="flex h-10 w-10 items-center justify-center rounded border border-gray-200 bg-gray-50 text-xs text-gray-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500">
                                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                       <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                                     </svg>
                                   </div>
                                 )}
-                                <span className="font-medium text-gray-900">
+                                <span className="font-medium text-gray-900 dark:text-gray-100">
                                   {file.name}
                                 </span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-gray-500">
+                            <TableCell className="text-gray-500 dark:text-gray-400">
                               {formatFileSize(file.size)}
                             </TableCell>
-                            <TableCell className="text-gray-500">
+                            <TableCell className="text-gray-500 dark:text-gray-400">
                               {formatDate(file.createdAt)}
                             </TableCell>
                             <TableCell>
                               <a
                                 href={serveUrl}
-                                className="text-sm font-medium text-blue-600 hover:underline"
+                                className="text-sm font-medium text-brand-teal hover:underline"
                                 download
                               >
                                 Descarcă
@@ -890,9 +890,9 @@ export function OrderDetail() {
       >
         <div className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Caută produs
-            </label>
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Caută produs
+              </label>
             <Input
               placeholder="Nume produs..."
               value={searchQuery}
@@ -904,7 +904,7 @@ export function OrderDetail() {
           </div>
 
           {searchQuery.trim() && searchResults.length === 0 && (
-            <p className="py-4 text-center text-sm text-gray-500">
+            <p className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
               Niciun produs găsit
             </p>
           )}
@@ -915,9 +915,9 @@ export function OrderDetail() {
                 <button
                   key={product.id}
                   type="button"
-                  className={cn(
-                    "w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50",
-                    selectedProduct?.id === product.id && "bg-blue-50"
+                    className={cn(
+                    "w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50 dark:hover:bg-white/5",
+                    selectedProduct?.id === product.id && "bg-brand-purple/10"
                   )}
                   onClick={() => {
                     setSelectedProduct(product)
@@ -932,15 +932,15 @@ export function OrderDetail() {
                   }}
                 >
                   <div>
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
                       {product.name}
                     </span>
-                    <span className="ml-2 text-gray-500">
+                    <span className="ml-2 text-gray-500 dark:text-gray-400">
                       ({formatPrice(product.basePrice)}/{product.unit})
                     </span>
                   </div>
                   {product.quantityRange && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       {product.quantityRange}
                     </p>
                   )}
@@ -950,11 +950,11 @@ export function OrderDetail() {
           )}
 
           {selectedProduct && (
-            <div className="rounded-md border border-gray-200 bg-gray-50 p-3">
-              <p className="font-medium text-gray-900">
+            <div className="rounded-md border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-white/[0.03]">
+              <p className="font-medium text-gray-900 dark:text-gray-100">
                 {selectedProduct.name}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {selectedProduct.quantityRange && (
                   <span className="mr-3">{selectedProduct.quantityRange}</span>
                 )}
@@ -963,7 +963,7 @@ export function OrderDetail() {
 
               {selectedProduct.options && selectedProduct.options.length > 0 && (
                 <div className="mt-2">
-                  <p className="mb-1 text-xs font-medium text-gray-600">Opțiuni:</p>
+                  <p className="mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">Opțiuni:</p>
                   <div className="space-y-1">
                     {selectedProduct.options.map((opt) => {
                       const isChecked = selectedOptions.some((o) => o.name === opt.name)
@@ -971,7 +971,7 @@ export function OrderDetail() {
                       return (
                         <label
                           key={opt.name}
-                          className="flex items-center gap-2 text-sm text-gray-700"
+                          className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
                         >
                           <input
                             type={isSingle ? "radio" : "checkbox"}
@@ -990,10 +990,10 @@ export function OrderDetail() {
                                 setItemUnitPrice(selectedProduct.basePrice + modifiers)
                               }
                             }}
-                            className="h-4 w-4 rounded border-gray-300"
+                            className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
                           />
                           <span>{opt.name}</span>
-                          <span className="text-gray-400">(+{formatPrice(opt.priceModifier)}/{selectedProduct.unit})</span>
+                          <span className="text-gray-400 dark:text-gray-500">(+{formatPrice(opt.priceModifier)}/{selectedProduct.unit})</span>
                         </label>
                       )
                     })}
@@ -1002,7 +1002,7 @@ export function OrderDetail() {
               )}
 
               <div className="mt-2 flex items-center gap-3">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Preț unitar:
                 </label>
                 <Input
@@ -1017,7 +1017,7 @@ export function OrderDetail() {
                 />
               </div>
               <div className="mt-2 flex items-center gap-3">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Cantitate:
                 </label>
                 <Input
@@ -1030,7 +1030,7 @@ export function OrderDetail() {
                     setItemQuantity(parseFloat(e.target.value) || 0.01)
                   }
                 />
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   Total: {formatPrice(itemQuantity * itemUnitPrice)}
                 </span>
               </div>

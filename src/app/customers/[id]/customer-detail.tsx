@@ -134,7 +134,7 @@ export function CustomerDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-brand-purple" />
       </div>
     )
   }
@@ -142,10 +142,10 @@ export function CustomerDetail() {
   if (!customer) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <p className="text-gray-500">Client negăsit</p>
+        <p className="text-gray-500 dark:text-gray-400">Client negăsit</p>
         <Link
           href="/customers"
-          className="mt-2 text-sm font-medium text-blue-600 hover:underline"
+          className="mt-2 text-sm font-medium text-brand-teal hover:underline"
         >
           Înapoi la clienți
         </Link>
@@ -165,7 +165,7 @@ export function CustomerDetail() {
         <Button variant="ghost" size="sm" onClick={() => router.push("/customers")}>
           ← Înapoi
         </Button>
-        <h1 className="text-2xl font-bold text-gray-900">{customer.name}</h1>
+        <h1 className="text-2xl font-bold text-brand-purple">{customer.name}</h1>
         {customer.phone && (
           <a
             href={`https://wa.me/${customer.phone.replace(/\D/g, "")}`}
@@ -183,13 +183,13 @@ export function CustomerDetail() {
         <Card>
           <CardContent className="py-4 text-center">
             <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
-            <p className="text-sm text-gray-500">Total comenzi</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Total comenzi</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="py-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{activeOrders}</p>
-            <p className="text-sm text-gray-500">Comenzi active</p>
+            <p className="text-2xl font-bold text-brand-teal">{activeOrders}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Comenzi active</p>
           </CardContent>
         </Card>
         <Card>
@@ -197,7 +197,7 @@ export function CustomerDetail() {
             <p className="text-2xl font-bold text-green-600">
               {formatPrice(totalValue)}
             </p>
-            <p className="text-sm text-gray-500">Valoare totală</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Valoare totală</p>
           </CardContent>
         </Card>
       </div>
@@ -221,7 +221,7 @@ export function CustomerDetail() {
               )}
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Nume <span className="text-red-500">*</span>
                 </label>
                 <Input
@@ -232,7 +232,7 @@ export function CustomerDetail() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Companie
                 </label>
                 <Input
@@ -243,7 +243,7 @@ export function CustomerDetail() {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Telefon
                   </label>
                   <Input
@@ -252,7 +252,7 @@ export function CustomerDetail() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Email
                   </label>
                   <Input
@@ -264,7 +264,7 @@ export function CustomerDetail() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Adresă
                 </label>
                 <Input
@@ -274,7 +274,7 @@ export function CustomerDetail() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Note
                 </label>
                 <Textarea
@@ -299,7 +299,7 @@ export function CustomerDetail() {
           </CardHeader>
           <CardContent>
             {customer.orders.length === 0 ? (
-              <p className="py-8 text-center text-sm text-gray-500">
+              <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                 Acest client nu are nicio comandă
               </p>
             ) : (
@@ -321,7 +321,7 @@ export function CustomerDetail() {
                       className="cursor-pointer"
                       onClick={() => router.push(`/orders/${order.id}`)}
                     >
-                      <TableCell className="font-medium text-gray-900">
+                      <TableCell className="font-medium text-gray-900 dark:text-gray-100">
                         {order.title}
                       </TableCell>
                       <TableCell>
@@ -337,13 +337,13 @@ export function CustomerDetail() {
                       <TableCell className="text-right font-medium">
                         {formatPrice(order.totalPrice)}
                       </TableCell>
-                      <TableCell className="text-gray-500">
+                      <TableCell className="text-gray-500 dark:text-gray-400">
                         {formatDate(order.createdAt)}
                       </TableCell>
-                      <TableCell className="text-gray-500">
+                      <TableCell className="text-gray-500 dark:text-gray-400">
                         {order.deadline ? formatDate(order.deadline) : "—"}
                       </TableCell>
-                      <TableCell className="text-gray-500">
+                      <TableCell className="text-gray-500 dark:text-gray-400">
                         {order.createdBy.name}
                       </TableCell>
                     </TableRow>

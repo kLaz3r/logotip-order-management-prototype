@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -16,10 +17,17 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="hidden w-60 border-r border-gray-200 bg-gray-50 md:flex md:flex-col">
-      <div className="flex h-14 items-center border-b border-gray-200 px-4">
-        <Link href="/dashboard" className="text-lg font-bold text-gray-900">
-          LOGOTIP
+    <aside className="hidden w-60 border-r border-gray-200 bg-brand-purple/[0.02] md:flex md:flex-col dark:border-gray-800 dark:bg-[#111118]">
+      <div className="flex h-14 items-center border-b border-gray-200 px-4 dark:border-gray-800">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <Image
+            src="/logotip.png"
+            alt="LOGOTIP"
+            width={28}
+            height={28}
+            className="shrink-0"
+          />
+          <span className="text-lg font-bold text-brand-purple dark:text-brand-orange">LOGOTIP</span>
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-3">
@@ -30,8 +38,8 @@ export function Sidebar() {
             className={cn(
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               pathname === item.href || pathname.startsWith(item.href + "/")
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                ? "bg-brand-purple/10 text-brand-purple dark:bg-brand-purple/20 dark:text-brand-orange"
+                : "text-gray-600 hover:bg-brand-purple/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-200"
             )}
           >
             <span>{item.icon}</span>

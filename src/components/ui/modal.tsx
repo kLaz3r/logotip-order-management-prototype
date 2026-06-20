@@ -41,12 +41,12 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     >
       <div
         className={cn(
-          "w-full max-w-lg rounded-lg bg-white shadow-xl",
+          "w-full max-w-lg rounded-lg bg-white shadow-xl dark:bg-[#1a1a24]",
           className
         )}
       >
         {title && (
-          <div className="flex items-center justify-between border-b px-6 py-4">
+          <div className="flex items-center justify-between border-b px-6 py-4 dark:border-gray-700">
             <h2 className="text-lg font-semibold">{title}</h2>
             <Button variant="ghost" size="icon" onClick={onClose}>
               ✕

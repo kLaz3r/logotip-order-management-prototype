@@ -1,15 +1,34 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-orange: #EAA626;
+  --color-brand-gold: #EBCD32;
+  --color-brand-yellow: #FAED36;
+  --color-brand-teal: #386666;
+  --color-brand-teal-light: #477F7F;
+  --color-brand-burnt-orange: #D67E29;
+  --color-brand-orange-dark: #E69021;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #111827;
+  --brand-purple: light-dark(#441A5F, #A78BFA);
+  --background: light-dark(#ffffff, #0f0f14);
+  --foreground: light-dark(#111827, #e2e2e8);
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 body {

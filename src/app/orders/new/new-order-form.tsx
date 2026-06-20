@@ -180,7 +180,7 @@ export function NewOrderForm() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Comandă nouă</h1>
+      <h1 className="text-2xl font-bold text-brand-purple">Comandă nouă</h1>
 
       <div
         className={cn(
@@ -202,7 +202,7 @@ export function NewOrderForm() {
                 )}
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Titlu <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -214,7 +214,7 @@ export function NewOrderForm() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Descriere
                   </label>
                   <Textarea
@@ -227,13 +227,13 @@ export function NewOrderForm() {
 
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Client <span className="text-red-500">*</span>
                     </label>
                     {!showClientForm && (
                       <button
                         type="button"
-                        className="text-sm font-medium text-blue-600 hover:underline"
+                        className="text-sm font-medium text-brand-teal hover:underline"
                         onClick={() => setShowClientForm(true)}
                       >
                         + Client nou
@@ -252,7 +252,7 @@ export function NewOrderForm() {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Prioritate
                     </label>
                     <Combobox
@@ -264,7 +264,7 @@ export function NewOrderForm() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Termen limită
                     </label>
                     <Input
@@ -276,7 +276,7 @@ export function NewOrderForm() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
+                  <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Note interne
                   </label>
                   <Textarea
@@ -329,7 +329,7 @@ export function NewOrderForm() {
                   )}
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Nume <span className="text-red-500">*</span>
                     </label>
                     <Input
@@ -341,7 +341,7 @@ export function NewOrderForm() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Companie
                     </label>
                     <Input
@@ -352,7 +352,7 @@ export function NewOrderForm() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Telefon
                     </label>
                     <Input
@@ -363,7 +363,7 @@ export function NewOrderForm() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Email
                     </label>
                     <Input
@@ -375,7 +375,7 @@ export function NewOrderForm() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Adresă
                     </label>
                     <Input
@@ -386,7 +386,7 @@ export function NewOrderForm() {
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Note
                     </label>
                     <Textarea

@@ -57,7 +57,7 @@ export function NewCustomerForm() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Client nou</h1>
+      <h1 className="text-2xl font-bold text-brand-purple">Client nou</h1>
 
       <Card>
         <CardHeader>
@@ -72,7 +72,7 @@ export function NewCustomerForm() {
             )}
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Nume <span className="text-red-500">*</span>
               </label>
               <Input
@@ -84,7 +84,7 @@ export function NewCustomerForm() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Companie
               </label>
               <Input
@@ -96,7 +96,7 @@ export function NewCustomerForm() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Telefon
                 </label>
                 <Input
@@ -107,7 +107,7 @@ export function NewCustomerForm() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
+                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Email
                 </label>
                 <Input
@@ -120,7 +120,7 @@ export function NewCustomerForm() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Adresă
               </label>
               <Input
@@ -131,7 +131,7 @@ export function NewCustomerForm() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
+              <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Note
               </label>
               <Textarea
