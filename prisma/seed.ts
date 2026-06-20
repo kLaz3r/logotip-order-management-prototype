@@ -202,6 +202,22 @@ async function main() {
   })
   console.log(`Employee user: ${employee.email}`)
 
+  // Seed customers
+  const existingCustomers = await prisma.customer.count()
+  if (existingCustomers === 0) {
+    const customersData = [
+      { name: "Mihai Popescu", company: "SC Exemplu SRL", phone: "069123456", email: "mihai@exemplu.md", address: "str. Ștefan cel Mare 1, Chișinău" },
+      { name: "Ana Rusu", company: "Birou Arhitectură ARH", phone: "068987654", email: "ana@arh.md", address: "bd. Dacia 20, Chișinău" },
+      { name: "Ion Creangă", company: null, phone: "079111222", email: "ion.creanga@email.md", address: "str. Pușkin 15, Chișinău" },
+      { name: "Elena Cojocaru", company: "Tipografia Modern Press", phone: "060555444", email: "elena@modernpress.md", address: "str. Albișoara 80, Chișinău" },
+      { name: "Andrei Ștefănescu", company: "Agenția ADEV", phone: "067333222", email: "andrei@adev.md" },
+    ]
+    await prisma.customer.createMany({ data: customersData })
+    console.log(`Created ${customersData.length} customers`)
+  } else {
+    console.log(`Customers already exist (${existingCustomers} found), skipping customer seed`)
+  }
+
   // Seed products
   const existingCount = await prisma.product.count()
   if (existingCount === 0) {

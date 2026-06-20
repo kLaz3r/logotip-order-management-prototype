@@ -44,7 +44,7 @@ export function Combobox({
     const searchable = [o.label, o.sublabel, ...(o.details || [])]
       .filter(Boolean)
       .join(" ")
-    return fuzzyMatch(searchable, search)
+    return fuzzyMatch(search, searchable)
   })
 
   const handleSelect = useCallback(

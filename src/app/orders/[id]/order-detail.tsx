@@ -716,15 +716,16 @@ export function OrderDetail() {
                             <Input
                               type="number"
                               min={0}
-                              step={1}
+                              step="any"
                               className="ml-auto w-20"
-                              value={item.quantity}
-                              onChange={(e) =>
+                              value={item.quantity || ""}
+                              onChange={(e) => {
+                                const val = e.target.value
                                 handleQuantityChange(
                                   i,
-                                  parseFloat(e.target.value) || 0.01
+                                  val === "" ? 0 : parseFloat(val) || 0
                                 )
-                              }
+                              }}
                             />
                           </TableCell>
                           <TableCell className="text-right font-medium">
@@ -1023,12 +1024,13 @@ export function OrderDetail() {
                 <Input
                   type="number"
                   min={0}
-                  step={1}
+                  step="any"
                   className="w-24"
-                  value={itemQuantity}
-                  onChange={(e) =>
-                    setItemQuantity(parseFloat(e.target.value) || 0.01)
-                  }
+                  value={itemQuantity || ""}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setItemQuantity(val === "" ? 0 : parseFloat(val) || 0)
+                  }}
                 />
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   Total: {formatPrice(itemQuantity * itemUnitPrice)}
@@ -1041,7 +1043,7 @@ export function OrderDetail() {
             <Button
               type="button"
               onClick={handleAddItem}
-              disabled={!selectedProduct || itemQuantity < 1}
+              disabled={!selectedProduct || itemQuantity <= 0}
             >
               Adaugă în comandă
             </Button>
