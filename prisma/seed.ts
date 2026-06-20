@@ -76,18 +76,18 @@ const productsData = [
   { category: "Scanare", name: "Scanare", format: "A4/A3", unit: "buc.", basePrice: 0.50 },
 
   // Cărți de vizită
-  { category: "Cărți de vizită", name: "Cărți vizită", quantityRange: "50 buc.", unit: "buc.", basePrice: 0.55, notes: "Comandă minimă: 50 buc." },
-  { category: "Cărți de vizită", name: "Cărți vizită", quantityRange: "50 - 100 buc.", unit: "buc.", basePrice: 0.45 },
-  { category: "Cărți de vizită", name: "Cărți vizită", quantityRange: ">500 buc.", unit: "buc.", basePrice: 0.40 },
-  { category: "Cărți de vizită", name: "Cărți vizită față/verso", unit: "buc.", basePrice: 0.15, notes: "Extra" },
-  { category: "Cărți de vizită", name: "Cărți vizită laminare lucios", unit: "buc.", basePrice: 0.30, notes: "Extra" },
-  { category: "Cărți de vizită", name: "Cărți vizită laminare mat", unit: "buc.", basePrice: 0.40, notes: "Extra" },
+  { category: "Cărți de vizită", name: "Cărți vizită", quantityRange: "50 buc.", unit: "buc.", basePrice: 0.55, notes: "Comandă minimă: 50 buc.", options: [{ name: "Față/verso", priceModifier: 0.15 }, { name: "Laminare lucios", priceModifier: 0.30 }, { name: "Laminare mat", priceModifier: 0.40 }] },
+  { category: "Cărți de vizită", name: "Cărți vizită", quantityRange: "50 - 100 buc.", unit: "buc.", basePrice: 0.45, options: [{ name: "Față/verso", priceModifier: 0.15 }, { name: "Laminare lucios", priceModifier: 0.30 }, { name: "Laminare mat", priceModifier: 0.40 }] },
+  { category: "Cărți de vizită", name: "Cărți vizită", quantityRange: ">500 buc.", unit: "buc.", basePrice: 0.40, options: [{ name: "Față/verso", priceModifier: 0.15 }, { name: "Laminare lucios", priceModifier: 0.30 }, { name: "Laminare mat", priceModifier: 0.40 }] },
 
   // Îndosariere
   { category: "Îndosariere", name: "Îndosariere arc plastic", quantityRange: "<50 pag.", unit: "buc.", basePrice: 8.00 },
   { category: "Îndosariere", name: "Îndosariere arc plastic", quantityRange: "50 - 100 pag.", unit: "buc.", basePrice: 10.00 },
   { category: "Îndosariere", name: "Îndosariere arc plastic", quantityRange: ">100 pag.", unit: "buc.", basePrice: 15.00 },
   { category: "Îndosariere", name: "Îndosariere arc metalic", unit: "buc.", basePrice: 12.00 },
+
+  // Legare
+  { category: "Legare", name: "Legare Lucrare de licență/disertație", unit: "buc.", basePrice: 0, optionType: "single", options: [{ name: "Copertă carton 250g.", priceModifier: 45 }, { name: "Copertă imitație piele", priceModifier: 65 }] },
 
   // Tipizate
   { category: "Tipizate", name: "Tipizate", format: "A4", quantityRange: "3 file", unit: "buc.", basePrice: 45.00 },
@@ -206,16 +206,23 @@ async function main() {
   const existingCount = await prisma.product.count()
   if (existingCount === 0) {
     await prisma.product.createMany({
-      data: productsData.map((p) => ({
-        category: p.category,
-        name: p.name,
-        format: p.format ?? null,
-        quantityRange: p.quantityRange ?? null,
-        unit: p.unit,
-        basePrice: p.basePrice,
-        notes: p.notes ?? null,
-        active: true,
-      })),
+      data: productsData.map((p) => {
+        const record: Record<string, unknown> = {
+          category: p.category,
+          name: p.name,
+          format: p.format ?? null,
+          quantityRange: p.quantityRange ?? null,
+          unit: p.unit,
+          basePrice: p.basePrice,
+          notes: p.notes ?? null,
+          optionType: (p as Record<string, unknown>).optionType ?? null,
+          active: true,
+        }
+        const opts = (p as Record<string, unknown>).options
+        if (opts) record.options = opts
+        return record
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any,
     })
     console.log(`Created ${productsData.length} products`)
   } else {

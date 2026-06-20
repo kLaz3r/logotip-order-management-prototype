@@ -23,6 +23,7 @@ interface Order {
   status: string
   priority: string
   deadline: string | null
+  createdAt: string
   totalPrice: number
   customer: { id: string; name: string }
   createdBy: { id: string; name: string }
@@ -37,20 +38,56 @@ const STATUS_COLOR_VALUES: Record<string, string> = {
   RIDICAT: "#6b7280",
 }
 
+function SortIcon({ field, sortField, sortOrder }: { field: string; sortField: string; sortOrder: "asc" | "desc" }) {
+  const isActive = sortField === field
+  const dir = isActive ? sortOrder : "desc"
+  return (
+    <svg
+      className={cn("h-4 w-4 shrink-0", isActive ? "text-gray-900" : "text-gray-400")}
+      viewBox="0 0 10 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 1v12" opacity={dir === "asc" ? "1" : "0.3"} />
+      {dir === "asc" ? (
+        <path d="M2 5l3-4 3 4" />
+      ) : (
+        <path d="M2 9l3 4 3-4" />
+      )}
+    </svg>
+  )
+}
+
 export function OrdersList() {
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("")
+  const [sortField, setSortField] = useState("createdAt")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
-  const fetchOrders = useCallback(async (s: string, st: string) => {
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder((o) => (o === "asc" ? "desc" : "asc"))
+    } else {
+      setSortField(field)
+      setSortOrder("asc")
+    }
+  }
+
+  const fetchOrders = useCallback(async (s: string, st: string, sf: string, so: string) => {
     setLoading(true)
     try {
       const qs = new URLSearchParams()
       if (s) qs.set("search", s)
       if (st) qs.set("status", st)
+      qs.set("sortBy", sf)
+      qs.set("sortOrder", so)
       const res = await fetch(`/api/orders?${qs.toString()}`)
       if (!res.ok) throw new Error("Eroare la încărcare")
       setOrders(await res.json())
@@ -64,12 +101,12 @@ export function OrdersList() {
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      fetchOrders(search, status)
+      fetchOrders(search, status, sortField, sortOrder)
     }, 150)
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [search, status, fetchOrders])
+  }, [search, status, sortField, sortOrder, fetchOrders])
 
   return (
     <div className="space-y-6">
@@ -145,12 +182,53 @@ export function OrdersList() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableHeaderCell>Titlu</TableHeaderCell>
-              <TableHeaderCell>Client</TableHeaderCell>
+              <TableHeaderCell>
+                <button
+                  onClick={() => handleSort("title")}
+                  className="flex items-center gap-1 hover:text-gray-900"
+                >
+                  Titlu
+                  <SortIcon field="title" sortField={sortField} sortOrder={sortOrder} />
+                </button>
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <button
+                  onClick={() => handleSort("customerName")}
+                  className="flex items-center gap-1 hover:text-gray-900"
+                >
+                  Client
+                  <SortIcon field="customerName" sortField={sortField} sortOrder={sortOrder} />
+                </button>
+              </TableHeaderCell>
               <TableHeaderCell>Status</TableHeaderCell>
               <TableHeaderCell>Prioritate</TableHeaderCell>
-              <TableHeaderCell>Termen</TableHeaderCell>
-              <TableHeaderCell className="text-right">Total</TableHeaderCell>
+              <TableHeaderCell>
+                <button
+                  onClick={() => handleSort("createdAt")}
+                  className="flex items-center gap-1 hover:text-gray-900"
+                >
+                  Data creării
+                  <SortIcon field="createdAt" sortField={sortField} sortOrder={sortOrder} />
+                </button>
+              </TableHeaderCell>
+              <TableHeaderCell>
+                <button
+                  onClick={() => handleSort("deadline")}
+                  className="flex items-center gap-1 hover:text-gray-900"
+                >
+                  Termen de livrare
+                  <SortIcon field="deadline" sortField={sortField} sortOrder={sortOrder} />
+                </button>
+              </TableHeaderCell>
+              <TableHeaderCell className="text-right">
+                <button
+                  onClick={() => handleSort("totalPrice")}
+                  className="inline-flex items-center gap-1 hover:text-gray-900"
+                >
+                  Total
+                  <SortIcon field="totalPrice" sortField={sortField} sortOrder={sortOrder} />
+                </button>
+              </TableHeaderCell>
               <TableHeaderCell className="text-right">Acțiuni</TableHeaderCell>
             </TableRow>
           </TableHead>
@@ -172,6 +250,9 @@ export function OrdersList() {
                   <Badge className={cn(PRIORITY_COLORS[order.priority] || "bg-gray-100 text-gray-600", "border-transparent")}>
                     {PRIORITY_LABELS[order.priority] || order.priority}
                   </Badge>
+                </TableCell>
+                <TableCell className="text-gray-500">
+                  {formatDate(order.createdAt)}
                 </TableCell>
                 <TableCell className="text-gray-500">
                   {order.deadline ? formatDate(order.deadline) : "—"}

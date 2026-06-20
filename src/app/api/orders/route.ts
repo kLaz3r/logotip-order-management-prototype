@@ -13,10 +13,17 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status")
   const search = searchParams.get("search")
   const customerId = searchParams.get("customerId")
+  const sortBy = searchParams.get("sortBy") || "createdAt"
+  const sortOrder = searchParams.get("sortOrder") || "desc"
 
   const where: Record<string, unknown> = {}
   if (status) where.status = status
   if (customerId) where.customerId = customerId
+
+  const orderBy =
+    sortBy === "customerName"
+      ? { customer: { name: sortOrder as "asc" | "desc" } }
+      : { [sortBy]: sortOrder }
 
   const orders = await prisma.order.findMany({
     where,
@@ -28,7 +35,7 @@ export async function GET(request: NextRequest) {
       },
       _count: { select: { items: true, files: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy,
   })
 
   if (search) {

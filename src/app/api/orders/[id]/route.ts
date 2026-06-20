@@ -50,10 +50,11 @@ export async function PUT(
 
   if (itemsData && Array.isArray(itemsData)) {
     updateData.items = {
-      create: itemsData.map((item: { productId: string; quantity: number; price: number }) => ({
+      create: itemsData.map((item: { productId: string; quantity: number; price: number; selectedOptions?: unknown }) => ({
         productId: item.productId,
         quantity: item.quantity,
         price: item.price,
+        selectedOptions: item.selectedOptions ?? null,
       })),
     }
   }

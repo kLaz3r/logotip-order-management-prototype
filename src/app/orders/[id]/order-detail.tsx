@@ -38,6 +38,12 @@ interface OrderItem {
   price: number
   unitPrice: number
   basePrice?: number
+  selectedOptions?: ProductOption[] | null
+}
+
+interface ProductOption {
+  name: string
+  priceModifier: number
 }
 
 interface OrderFile {
@@ -82,6 +88,8 @@ interface Product {
   unit: string
   quantityRange: string | null
   notes: string | null
+  options: ProductOption[] | null
+  optionType: string | null
 }
 
 function formatFileSize(bytes: number): string {
@@ -127,6 +135,7 @@ export function OrderDetail() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [itemQuantity, setItemQuantity] = useState<number>(1)
   const [itemUnitPrice, setItemUnitPrice] = useState(0)
+  const [selectedOptions, setSelectedOptions] = useState<ProductOption[]>([])
 
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
@@ -160,6 +169,7 @@ export function OrderDetail() {
           productId: string
           quantity: number
           price: number
+          selectedOptions?: ProductOption[] | null
           product?: { name?: string; basePrice?: number }
         }[]
         setItems(
@@ -170,6 +180,7 @@ export function OrderDetail() {
             price: item.price,
             unitPrice: item.quantity > 0 ? item.price / item.quantity : (item.product?.basePrice ?? 0),
             basePrice: item.product?.basePrice,
+            selectedOptions: item.selectedOptions ?? null,
             id: item.id,
           }))
         )
@@ -261,6 +272,7 @@ export function OrderDetail() {
         unitPrice: itemUnitPrice,
         basePrice: selectedProduct.basePrice,
         productName: selectedProduct.name,
+        selectedOptions: selectedOptions.length > 0 ? selectedOptions : null,
       }
       setItems(updated)
     } else {
@@ -273,12 +285,14 @@ export function OrderDetail() {
           price: itemQuantity * itemUnitPrice,
           unitPrice: itemUnitPrice,
           basePrice: selectedProduct.basePrice,
+          selectedOptions: selectedOptions.length > 0 ? selectedOptions : null,
         },
       ])
     }
     setSelectedProduct(null)
     setItemQuantity(1)
     setItemUnitPrice(0)
+    setSelectedOptions([])
     setSearchQuery("")
     setModalOpen(false)
   }
@@ -392,6 +406,7 @@ export function OrderDetail() {
           productId: i.productId,
           quantity: i.quantity,
           price: i.price,
+          selectedOptions: i.selectedOptions ?? null,
         })),
       }
       if (description.trim()) body.description = description.trim()
@@ -676,6 +691,11 @@ export function OrderDetail() {
                         <TableRow key={i}>
                           <TableCell className="font-medium text-gray-900">
                             {item.productName || "—"}
+                            {item.selectedOptions && item.selectedOptions.length > 0 && (
+                              <span className="ml-2 text-xs text-gray-400">
+                                ({item.selectedOptions.map((o) => o.name).join(", ")})
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             <Input
@@ -864,6 +884,7 @@ export function OrderDetail() {
           setSearchQuery("")
           setItemQuantity(1)
           setItemUnitPrice(0)
+          setSelectedOptions([])
         }}
         title="Adaugă produs"
       >
@@ -900,7 +921,14 @@ export function OrderDetail() {
                   )}
                   onClick={() => {
                     setSelectedProduct(product)
-                    setItemUnitPrice(product.basePrice)
+                    if (product.optionType === "single" && product.options && product.options.length > 0) {
+                      const defaultOpt = product.options[0]
+                      setSelectedOptions([defaultOpt])
+                      setItemUnitPrice(product.basePrice + defaultOpt.priceModifier)
+                    } else {
+                      setSelectedOptions([])
+                      setItemUnitPrice(product.basePrice)
+                    }
                   }}
                 >
                   <div>
@@ -932,6 +960,47 @@ export function OrderDetail() {
                 )}
                 Preț bază: {formatPrice(selectedProduct.basePrice)}/{selectedProduct.unit}
               </p>
+
+              {selectedProduct.options && selectedProduct.options.length > 0 && (
+                <div className="mt-2">
+                  <p className="mb-1 text-xs font-medium text-gray-600">Opțiuni:</p>
+                  <div className="space-y-1">
+                    {selectedProduct.options.map((opt) => {
+                      const isChecked = selectedOptions.some((o) => o.name === opt.name)
+                      const isSingle = selectedProduct.optionType === "single"
+                      return (
+                        <label
+                          key={opt.name}
+                          className="flex items-center gap-2 text-sm text-gray-700"
+                        >
+                          <input
+                            type={isSingle ? "radio" : "checkbox"}
+                            name={isSingle ? "product-option" : undefined}
+                            checked={isChecked}
+                            onChange={() => {
+                              if (isSingle) {
+                                setSelectedOptions([opt])
+                                setItemUnitPrice(selectedProduct.basePrice + opt.priceModifier)
+                              } else {
+                                const newOptions = isChecked
+                                  ? selectedOptions.filter((o) => o.name !== opt.name)
+                                  : [...selectedOptions, opt]
+                                setSelectedOptions(newOptions)
+                                const modifiers = newOptions.reduce((sum, o) => sum + o.priceModifier, 0)
+                                setItemUnitPrice(selectedProduct.basePrice + modifiers)
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <span>{opt.name}</span>
+                          <span className="text-gray-400">(+{formatPrice(opt.priceModifier)}/{selectedProduct.unit})</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-2 flex items-center gap-3">
                 <label className="text-sm font-medium text-gray-700">
                   Preț unitar:

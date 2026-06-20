@@ -17,6 +17,11 @@ import {
 import { formatPrice } from "@/lib/utils"
 import { fuzzyMatch } from "@/lib/search"
 
+interface ProductOption {
+  name: string
+  priceModifier: number
+}
+
 interface Product {
   id: string
   category: string
@@ -28,6 +33,8 @@ interface Product {
   basePrice: number
   notes: string | null
   active: boolean
+  options: ProductOption[] | null
+  optionType: string | null
 }
 
 export function PricingList() {
@@ -43,6 +50,8 @@ export function PricingList() {
   const [newUnit, setNewUnit] = useState("")
   const [newBasePrice, setNewBasePrice] = useState("")
   const [newActive, setNewActive] = useState(true)
+  const [newOptions, setNewOptions] = useState<ProductOption[]>([])
+  const [newOptionType, setNewOptionType] = useState<string>("")
   const [addLoading, setAddLoading] = useState(false)
   const [addError, setAddError] = useState("")
 
@@ -180,6 +189,8 @@ export function PricingList() {
           unit: newUnit.trim(),
           basePrice: price,
           active: newActive,
+          options: newOptions.length > 0 ? newOptions : null,
+          optionType: newOptionType || null,
         }),
       })
       if (!res.ok) {
@@ -195,6 +206,8 @@ export function PricingList() {
       setNewUnit("")
       setNewBasePrice("")
       setNewActive(true)
+      setNewOptions([])
+      setNewOptionType("")
     } catch (err) {
       setAddError(err instanceof Error ? err.message : "Eroare la adăugare")
     } finally {
@@ -255,6 +268,7 @@ export function PricingList() {
               <TableHeaderCell>Cantitate</TableHeaderCell>
               <TableHeaderCell>Unitate</TableHeaderCell>
               <TableHeaderCell className="text-right">Preț bază</TableHeaderCell>
+              <TableHeaderCell>Opțiuni</TableHeaderCell>
               <TableHeaderCell className="text-center">Activ</TableHeaderCell>
             </TableRow>
           </TableHead>
@@ -307,6 +321,11 @@ export function PricingList() {
                       {formatPrice(product.basePrice)}
                     </span>
                   )}
+                </TableCell>
+                <TableCell className="text-gray-500">
+                  {product.options && product.options.length > 0
+                    ? `${product.options.length} opțiune${product.options.length > 1 ? "i" : ""}${product.optionType === "single" ? " (radio)" : ""}`
+                    : "—"}
                 </TableCell>
                 <TableCell className="text-center">
                   <button
@@ -393,6 +412,79 @@ export function PricingList() {
               value={newBasePrice}
               onChange={(e) => setNewBasePrice(e.target.value)}
             />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Opțiuni
+            </label>
+            <p className="mb-2 text-xs text-gray-500">
+              Opțiunile adaugă la prețul unitar (ex: laminare, față/verso)
+            </p>
+            {newOptions.length === 0 ? (
+              <p className="py-2 text-sm text-gray-400">Nicio opțiune</p>
+            ) : (
+              <div className="space-y-2">
+                {newOptions.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      placeholder="Nume opțiune"
+                      value={opt.name}
+                      onChange={(e) => {
+                        const updated = [...newOptions]
+                        updated[i] = { ...opt, name: e.target.value }
+                        setNewOptions(updated)
+                      }}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Adaos"
+                      value={opt.priceModifier || ""}
+                      onChange={(e) => {
+                        const updated = [...newOptions]
+                        updated[i] = { ...opt, priceModifier: parseFloat(e.target.value) || 0 }
+                        setNewOptions(updated)
+                      }}
+                      className="w-24"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700"
+                      onClick={() => setNewOptions(newOptions.filter((_, j) => j !== i))}
+                    >
+                      Șterge
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => setNewOptions([...newOptions, { name: "", priceModifier: 0 }])}
+            >
+              + Adaugă opțiune
+            </Button>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Tip opțiuni
+            </label>
+            <select
+              value={newOptionType}
+              onChange={(e) => setNewOptionType(e.target.value)}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="">Selectare multiplă (bifare)</option>
+              <option value="single">Selectare unică (radio)</option>
+            </select>
           </div>
 
           <label className="flex items-center gap-2 text-sm">
