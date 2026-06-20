@@ -58,7 +58,16 @@ export function KanbanBoard() {
   const [error, setError] = useState<string | null>(null)
   const [activeOrder, setActiveOrder] = useState<KanbanOrder | null>(null)
   const [search, setSearch] = useState("")
+  const [myOrdersOnly, setMyOrdersOnly] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const initialised = useRef(false)
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((u) => setUserId(u.id))
+      .catch(() => {})
+  }, [])
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -123,6 +132,9 @@ export function KanbanBoard() {
 
   function getOrdersByStatus(status: string): KanbanOrder[] {
     let filtered = orders.filter((o) => o.status === status)
+    if (myOrdersOnly && userId) {
+      filtered = filtered.filter((o) => o.createdBy.id === userId)
+    }
     if (search.trim()) {
       const q = search.trim()
       filtered = filtered.filter(
@@ -134,7 +146,10 @@ export function KanbanBoard() {
     return filtered
   }
 
-  const totalOrders = orders.length
+  const displayOrders = myOrdersOnly && userId
+    ? orders.filter((o) => o.createdBy.id === userId)
+    : orders
+  const totalOrders = displayOrders.length
   const statusCounts = KANBAN_STATUSES.reduce(
     (acc, s) => {
       acc[s] = getOrdersByStatus(s).length
@@ -146,7 +161,6 @@ export function KanbanBoard() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <StatsSkeleton />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {KANBAN_STATUSES.map((status) => (
             <div
@@ -188,17 +202,47 @@ export function KanbanBoard() {
 
   return (
     <div className="space-y-6">
-      <StatsHeader
-        totalOrders={totalOrders}
-        statusCounts={statusCounts}
-      />
+      <div>
+        <h1 className="text-xl font-bold text-gray-900">Panou de control</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Gestionați comenzile prin tragere și plasare
+        </p>
+      </div>
 
-      <Input
-        placeholder="Caută după titlu sau client..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="sm:max-w-sm"
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Input
+          placeholder="Caută după titlu sau client..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="sm:max-w-sm"
+        />
+        <div className="inline-flex rounded-md border border-gray-300 bg-gray-50 p-0.5">
+          <button
+            type="button"
+            onClick={() => setMyOrdersOnly(false)}
+            className={cn(
+              "rounded px-3 py-1.5 text-sm font-medium transition-colors",
+              !myOrdersOnly
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            Toate
+          </button>
+          <button
+            type="button"
+            onClick={() => setMyOrdersOnly(true)}
+            className={cn(
+              "rounded px-3 py-1.5 text-sm font-medium transition-colors",
+              myOrdersOnly
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            )}
+          >
+            Ale mele
+          </button>
+        </div>
+      </div>
 
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -238,72 +282,6 @@ export function KanbanBoard() {
           </Link>
         </div>
       )}
-    </div>
-  )
-}
-
-function StatsHeader({
-  totalOrders,
-  statusCounts,
-}: {
-  totalOrders: number
-  statusCounts: Record<string, number>
-}) {
-  return (
-    <div>
-      <h1 className="text-xl font-bold text-gray-900">Panou de control</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Gestionați comenzile prin tragere și plasare
-      </p>
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <StatCard label="Total comenzi" value={totalOrders} borderColor="border-gray-300">
-          <span className="text-xl">📊</span>
-        </StatCard>
-        {KANBAN_STATUSES.map((status) => (
-          <StatCard
-            key={status}
-            label={STATUS_LABELS[status]}
-            value={statusCounts[status]}
-            borderColor={COLUMN_HEADER_COLORS[status].replace("bg-", "border-")}
-          >
-            <div
-              className={cn(
-                "h-3 w-3 rounded-full",
-                COLUMN_HEADER_COLORS[status]
-              )}
-            />
-          </StatCard>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function StatCard({
-  label,
-  value,
-  borderColor,
-  children,
-}: {
-  label: string
-  value: number
-  borderColor: string
-  children: React.ReactNode
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-3 rounded-lg border-l-4 bg-white p-3 shadow-sm",
-        borderColor
-      )}
-    >
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-50">
-        {children}
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-lg font-bold text-gray-900">{value}</p>
-      </div>
     </div>
   )
 }
@@ -446,23 +424,6 @@ function OrderCardContent({ order }: { order: KanbanOrder }) {
             {order.createdBy.name}
           </span>
         )}
-      </div>
-    </div>
-  )
-}
-
-function StatsSkeleton() {
-  return (
-    <div>
-      <div className="mb-1 h-7 w-48 animate-pulse rounded bg-gray-200" />
-      <div className="mb-4 h-4 w-72 animate-pulse rounded bg-gray-100" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div
-            key={i}
-            className="h-16 animate-pulse rounded-lg border border-gray-200 bg-white"
-          />
-        ))}
       </div>
     </div>
   )

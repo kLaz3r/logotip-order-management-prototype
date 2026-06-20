@@ -6,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Combobox } from "@/components/ui/combobox"
+
 import {
   Table,
   TableHead,
@@ -29,14 +29,13 @@ interface Order {
   _count: { items: number; files: number }
 }
 
-const STATUS_OPTIONS = [
-  { value: "", label: "Toate statusurile" },
-  { value: "NOU", label: "Nou" },
-  { value: "IN_LUCRU", label: "În lucru" },
-  { value: "ASTEAPTA_CLIENT", label: "Așteaptă client" },
-  { value: "FINALIZAT", label: "Finalizat" },
-  { value: "RIDICAT", label: "Ridicat" },
-]
+const STATUS_COLOR_VALUES: Record<string, string> = {
+  NOU: "#3b82f6",
+  IN_LUCRU: "#eab308",
+  ASTEAPTA_CLIENT: "#f97316",
+  FINALIZAT: "#22c55e",
+  RIDICAT: "#6b7280",
+}
 
 export function OrdersList() {
   const router = useRouter()
@@ -88,13 +87,44 @@ export function OrdersList() {
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-sm"
         />
-        <Combobox
-          options={STATUS_OPTIONS}
-          value={status}
-          placeholder="Toate statusurile"
-          onChange={(v) => setStatus(v)}
-          className="sm:max-w-[200px]"
-        />
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => setStatus("")}
+            className={cn(
+              "rounded-full px-3 py-1.5 text-sm font-medium transition-all",
+              status === ""
+                ? "bg-gray-900 text-white shadow-sm"
+                : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700"
+            )}
+          >
+            Toate
+          </button>
+          {Object.entries(STATUS_LABELS).map(([value, label]) => {
+            const color = STATUS_COLOR_VALUES[value]
+            const isActive = status === value
+            return (
+              <button
+                key={value}
+                onClick={() => setStatus(value)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-sm font-medium transition-all flex items-center gap-1.5",
+                  isActive
+                    ? "text-white shadow-sm"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                )}
+                style={isActive ? { backgroundColor: color } : undefined}
+              >
+                {!isActive && (
+                  <span
+                    className="h-2 w-2 rounded-full shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
+                )}
+                {label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {loading ? (
