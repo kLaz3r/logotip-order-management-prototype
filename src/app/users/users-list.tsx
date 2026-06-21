@@ -40,12 +40,13 @@ export function UsersList() {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
 
   const [showModal, setShowModal] = useState(false)
-  const [newName, setNewName] = useState("")
-  const [newEmail, setNewEmail] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [newRole, setNewRole] = useState("EMPLOYEE")
-  const [addLoading, setAddLoading] = useState(false)
-  const [addError, setAddError] = useState("")
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [formName, setFormName] = useState("")
+  const [formEmail, setFormEmail] = useState("")
+  const [formPassword, setFormPassword] = useState("")
+  const [formRole, setFormRole] = useState("EMPLOYEE")
+  const [formLoading, setFormLoading] = useState(false)
+  const [formError, setFormError] = useState("")
 
   const fetchUsers = useCallback(async (q: string) => {
     try {
@@ -97,43 +98,79 @@ export function UsersList() {
     }
   }
 
-  async function handleAddUser(e: React.FormEvent) {
-    e.preventDefault()
-    setAddError("")
+  function openAddModal() {
+    setEditingUser(null)
+    setFormName("")
+    setFormEmail("")
+    setFormPassword("")
+    setFormRole("EMPLOYEE")
+    setFormError("")
+    setShowModal(true)
+  }
 
-    if (!newName.trim() || !newEmail.trim() || !newPassword.trim()) {
-      setAddError("Toate câmpurile sunt obligatorii")
+  function openEditModal(user: User) {
+    setEditingUser(user)
+    setFormName(user.name)
+    setFormEmail(user.email)
+    setFormPassword("")
+    setFormRole(user.role)
+    setFormError("")
+    setShowModal(true)
+  }
+
+  function closeModal() {
+    setShowModal(false)
+    setEditingUser(null)
+    setFormError("")
+  }
+
+  async function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setFormError("")
+
+    if (!formName.trim() || !formEmail.trim()) {
+      setFormError("Numele și emailul sunt obligatorii")
       return
     }
 
-    setAddLoading(true)
+    if (!editingUser && !formPassword.trim()) {
+      setFormError("Parola este obligatorie pentru un utilizator nou")
+      return
+    }
+
+    const isEdit = !!editingUser
+    const url = isEdit ? `/api/users/${editingUser.id}` : "/api/users"
+    const method = isEdit ? "PUT" : "POST"
+    const body: Record<string, unknown> = {
+      name: formName.trim(),
+      email: formEmail.trim(),
+      role: formRole,
+    }
+    if (formPassword.trim()) body.password = formPassword
+
+    setFormLoading(true)
     try {
-      const res = await fetch("/api/users", {
-        method: "POST",
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newName.trim(),
-          email: newEmail.trim(),
-          password: newPassword,
-          role: newRole,
-        }),
+        body: JSON.stringify(body),
       })
       if (!res.ok) {
         if (res.status === 403) throw new Error("Nu aveți permisiuni de administrator")
         const data = await res.json()
-        throw new Error(data.error || "Eroare la crearea utilizatorului")
+        throw new Error(data.error || "Eroare la salvare")
       }
       const user = await res.json()
-      setUsers((prev) => [...prev, { ...user, _count: { orders: 0 } }])
-      setShowModal(false)
-      setNewName("")
-      setNewEmail("")
-      setNewPassword("")
-      setNewRole("EMPLOYEE")
+      if (isEdit) {
+        setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...user, _count: u._count } : u)))
+      } else {
+        setUsers((prev) => [...prev, { ...user, _count: { orders: 0 } }])
+      }
+      closeModal()
     } catch (err) {
-      setAddError(err instanceof Error ? err.message : "Eroare la crearea utilizatorului")
+      setFormError(err instanceof Error ? err.message : "Eroare la salvare")
     } finally {
-      setAddLoading(false)
+      setFormLoading(false)
     }
   }
 
@@ -154,7 +191,7 @@ export function UsersList() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-brand-purple">Utilizatori</h1>
-        <Button onClick={() => setShowModal(true)}>Utilizator nou</Button>
+        <Button onClick={openAddModal}>Utilizator nou</Button>
       </div>
 
       {error && (
@@ -194,6 +231,7 @@ export function UsersList() {
               <TableHeaderCell className="text-center">Activ</TableHeaderCell>
               <TableHeaderCell className="text-right">Comenzi</TableHeaderCell>
               <TableHeaderCell>Creat</TableHeaderCell>
+              <TableHeaderCell className="text-right">Acțiuni</TableHeaderCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -237,6 +275,15 @@ export function UsersList() {
                 <TableCell className="text-gray-500 dark:text-gray-400">
                   {formatDate(user.createdAt)}
                 </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditModal(user)}
+                  >
+                    Editează
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -245,16 +292,13 @@ export function UsersList() {
 
       <Modal
         open={showModal}
-        onClose={() => {
-          setShowModal(false)
-          setAddError("")
-        }}
-        title="Utilizator nou"
+        onClose={closeModal}
+        title={editingUser ? "Editează utilizator" : "Utilizator nou"}
       >
-        <form onSubmit={handleAddUser} className="space-y-4">
-          {addError && (
+        <form onSubmit={handleFormSubmit} className="space-y-4">
+          {formError && (
             <div className="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {addError}
+              {formError}
             </div>
           )}
 
@@ -264,8 +308,8 @@ export function UsersList() {
             </label>
             <Input
               placeholder="Nume complet"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
               required
             />
           </div>
@@ -277,22 +321,23 @@ export function UsersList() {
             <Input
               type="email"
               placeholder="email@exemplu.ro"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
+              value={formEmail}
+              onChange={(e) => setFormEmail(e.target.value)}
               required
             />
           </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Parolă <span className="text-red-500">*</span>
+              Parolă {!editingUser && <span className="text-red-500">*</span>}
+              {editingUser && <span className="text-xs text-gray-400 ml-1">(lasă gol pentru a păstra)</span>}
             </label>
             <Input
               type="password"
-              placeholder="Parola"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              required
+              placeholder={editingUser ? "Lasă gol pentru a păstra" : "Parola"}
+              value={formPassword}
+              onChange={(e) => setFormPassword(e.target.value)}
+              required={!editingUser}
             />
           </div>
 
@@ -302,9 +347,9 @@ export function UsersList() {
             </label>
             <Combobox
               options={ROLE_OPTIONS}
-              value={newRole}
+              value={formRole}
               placeholder="Selectează rolul"
-              onChange={(v) => setNewRole(v)}
+              onChange={(v) => setFormRole(v)}
             />
           </div>
 
@@ -312,16 +357,17 @@ export function UsersList() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => {
-                setShowModal(false)
-                setAddError("")
-              }}
-              disabled={addLoading}
+              onClick={closeModal}
+              disabled={formLoading}
             >
               Anulează
             </Button>
-            <Button type="submit" disabled={addLoading}>
-              {addLoading ? "Se creează..." : "Creează utilizator"}
+            <Button type="submit" disabled={formLoading}>
+              {formLoading
+                ? "Se salvează..."
+                : editingUser
+                  ? "Salvează modificările"
+                  : "Creează utilizator"}
             </Button>
           </div>
         </form>
