@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -448,7 +449,7 @@ export function OrderDetail() {
         <Button
           variant="outline"
           className="mt-3"
-          onClick={() => window.location.reload()}
+          onClick={() => router.refresh()}
         >
           Reîncearcă
         </Button>
@@ -811,10 +812,13 @@ export function OrderDetail() {
                             <TableCell className="min-w-[200px]">
                               <div className="flex items-center gap-3">
                                 {isImage ? (
-                                  <img
+                                  <Image
                                     src={serveUrl}
                                     alt={file.name}
-                                    className="h-10 w-10 rounded border border-gray-200 object-cover"
+                                    width={40}
+                                    height={40}
+                                    unoptimized
+                                    className="rounded border border-gray-200 object-cover"
                                   />
                                 ) : isPdf ? (
                                   <div className="flex h-10 w-10 items-center justify-center rounded border border-gray-200 bg-red-50 text-xs font-bold text-red-600">

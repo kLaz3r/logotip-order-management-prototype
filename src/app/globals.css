@@ -35,22 +35,3 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
-
-.kanban-column {
-  min-width: 280px;
-  max-width: 320px;
-}
-
-.kanban-card {
-  touch-action: none;
-}
-
-@media (max-width: 768px) {
-  .kanban-scroll {
-    scroll-snap-type: x mandatory;
-  }
-
-  .kanban-column {
-    scroll-snap-align: start;
-  }
-}

@@ -39,6 +39,20 @@ export async function POST(request: NextRequest) {
   }
 
   const data = await request.json()
-  const customer = await prisma.customer.create({ data })
+
+  if (!data.name || typeof data.name !== "string" || !data.name.trim()) {
+    return NextResponse.json({ error: "Numele este obligatoriu" }, { status: 400 })
+  }
+
+  const safeData = {
+    name: data.name.trim(),
+    company: typeof data.company === "string" ? data.company.trim() || null : null,
+    phone: typeof data.phone === "string" ? data.phone.trim() || null : null,
+    email: typeof data.email === "string" ? data.email.trim() || null : null,
+    address: typeof data.address === "string" ? data.address.trim() || null : null,
+    notes: typeof data.notes === "string" ? data.notes.trim() || null : null,
+  }
+
+  const customer = await prisma.customer.create({ data: safeData })
   return NextResponse.json(customer, { status: 201 })
 }

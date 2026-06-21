@@ -71,7 +71,7 @@ export function KanbanBoard() {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const res = await fetch("/api/orders", { cache: "no-store" })
+      const res = await fetch("/api/orders")
       if (!res.ok) throw new Error("Eroare la încărcarea comenzilor")
       const data = await res.json()
       setOrders(data)
@@ -202,11 +202,16 @@ export function KanbanBoard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-brand-purple">Panou de control</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Gestionați comenzile prin tragere și plasare
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-brand-purple">Panou de control</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Gestionați comenzile prin tragere și plasare
+          </p>
+        </div>
+        <Link href="/orders/new">
+          <Button>Comandă nouă</Button>
+        </Link>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

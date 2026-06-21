@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(created, { status: 201 })
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Eroare la încărcarea fișierului" },
       { status: 500 }

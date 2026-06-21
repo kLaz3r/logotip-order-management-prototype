@@ -95,10 +95,6 @@ export function Combobox({
   }
 
   useEffect(() => {
-    setHighlightIndex(0)
-  }, [search])
-
-  useEffect(() => {
     if (open && listRef.current) {
       const el = listRef.current.children[highlightIndex] as HTMLElement
       if (el) {
@@ -124,6 +120,8 @@ export function Combobox({
         ref={inputRef}
         type="text"
         role="combobox"
+        aria-controls="combobox-list"
+        aria-expanded={open}
         autoComplete="off"
         required={required}
         disabled={disabled}
@@ -138,6 +136,7 @@ export function Combobox({
         }}
         onChange={(e) => {
           setSearch(e.target.value)
+          setHighlightIndex(0)
           setOpen(true)
         }}
         onKeyDown={handleKeyDown}
@@ -145,7 +144,9 @@ export function Combobox({
 
       {open && (
         <ul
+          id="combobox-list"
           ref={listRef}
+          role="listbox"
           className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-600 dark:bg-[#1a1a24]"
         >
           {          filtered.length === 0 ? (

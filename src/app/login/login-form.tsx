@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
@@ -51,14 +50,10 @@ export function LoginForm() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <div className="text-center">
-            <Image
-              src="/logotip.png"
-              alt="LOGOTIP"
-              width={48}
-              height={48}
-              className="mx-auto mb-3"
-            />
-            <h1 className="text-2xl font-bold text-brand-purple dark:text-brand-orange">LOGOTIP</h1>
+            <h1 className="text-2xl font-bold text-brand-purple dark:text-brand-orange">
+              LOGOTIP
+              <sup className="ml-1.5 rounded bg-brand-orange/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-orange">BETA</sup>
+            </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               Autentificare sistem management
             </p>

@@ -49,21 +49,23 @@ export function NewOrderForm() {
   const [clientAddress, setClientAddress] = useState("")
   const [clientNotes, setClientNotes] = useState("")
 
-  async function loadCustomers() {
-    try {
-      const res = await fetch("/api/customers")
-      if (!res.ok) throw new Error("Eroare la încărcarea clienților")
-      const data = await res.json()
-      setCustomers(data)
-    } catch {
-      setError("Nu s-au putut încărca clienții")
-    } finally {
-      setFetchingCustomers(false)
-    }
-  }
-
   useEffect(() => {
-    loadCustomers()
+    let cancelled = false
+    async function init() {
+      try {
+        const res = await fetch("/api/customers")
+        if (cancelled) return
+        if (!res.ok) throw new Error("Eroare la încărcarea clienților")
+        const data = await res.json()
+        if (!cancelled) setCustomers(data)
+      } catch {
+        if (!cancelled) setError("Nu s-au putut încărca clienții")
+      } finally {
+        if (!cancelled) setFetchingCustomers(false)
+      }
+    }
+    init()
+    return () => { cancelled = true }
   }, [])
 
   const customerOptions: ComboboxOption[] = [
@@ -108,7 +110,7 @@ export function NewOrderForm() {
       }
       const newCustomer: Customer = await res.json()
 
-      await loadCustomers()
+      setCustomers((prev) => [...prev, newCustomer])
       setCustomerId(newCustomer.id)
 
       setClientName("")

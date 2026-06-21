@@ -9,8 +9,6 @@ const protectedPaths = [
   "/users",
 ]
 
-const publicPaths = ["/login", "/api"]
-
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const sessionCookie = request.cookies.get("logotip_session")
